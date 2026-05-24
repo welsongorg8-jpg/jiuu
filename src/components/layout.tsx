@@ -17,45 +17,46 @@ type NavItem = {
 
 const translations = {
   en: {
-    dashboard: "Dashboard",
-    balance: "Balance",
-    transactions: "Transactions",
-    withdraw: "Withdraw",
-    platforms: "Platforms",
-    settings: "Settings",
-    adminPanel: "Admin Panel",
-    logout: "Logout",
-    loading: "Loading...",
+    dashboard: "Dashboard", balance: "Balance", transactions: "Transactions",
+    withdraw: "Withdraw", platforms: "Platforms", settings: "Settings",
+    adminPanel: "Admin Panel", logout: "Logout", loading: "Loading...",
   },
   ar: {
-    dashboard: "لوحة التحكم",
-    balance: "الرصيد",
-    transactions: "العمليات",
-    withdraw: "سحب",
-    platforms: "المنصات",
-    settings: "الإعدادات",
-    adminPanel: "لوحة الأدمن",
-    logout: "تسجيل الخروج",
-    loading: "جاري التحميل...",
+    dashboard: "لوحة التحكم", balance: "الرصيد", transactions: "العمليات",
+    withdraw: "سحب", platforms: "المنصات", settings: "الإعدادات",
+    adminPanel: "لوحة الأدمن", logout: "تسجيل الخروج", loading: "جاري التحميل...",
   },
 } as const;
+
+function CachvioLogo() {
+  return (
+    <div className="flex items-center gap-2">
+      <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center shadow-[0_0_10px_rgba(249,115,22,0.4)]">
+        <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="white" strokeLinejoin="round"/>
+        </svg>
+      </div>
+      <span className="text-lg font-black tracking-tight text-white">
+        Cach<span className="text-primary">vio</span>
+      </span>
+    </div>
+  );
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const { data: user, isLoading } = useGetMe();
-  const [language, setLanguage] = useState<"en" | "ar">(() => (localStorage.getItem("gr-language") as "en" | "ar") || "en");
+  const [language, setLanguage] = useState<"en" | "ar">(() => (localStorage.getItem("cv-language") as "en" | "ar") || "en");
 
   useEffect(() => {
-    localStorage.setItem("gr-language", language);
+    localStorage.setItem("cv-language", language);
     document.documentElement.lang = language;
     document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
   }, [language]);
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      setLocation("/login");
-    }
+    if (!isLoading && !user) setLocation("/login");
   }, [isLoading, user, setLocation]);
 
   const t = useMemo(() => translations[language], [language]);
@@ -78,29 +79,27 @@ export function Layout({ children }: { children: React.ReactNode }) {
   };
 
   const navItems: NavItem[] = [
-    { href: "/dashboard", label: t.dashboard, icon: Home },
-    { href: "/balance", label: t.balance, icon: Wallet },
-    { href: "/transactions", label: t.transactions, icon: History },
-    { href: "/withdraw", label: t.withdraw, icon: Send },
-    { href: "/platforms", label: t.platforms, icon: Gamepad2 },
-    { href: "/settings", label: t.settings, icon: Settings },
+    { href: "/dashboard", label: t.dashboard as NavLabel, icon: Home },
+    { href: "/balance", label: t.balance as NavLabel, icon: Wallet },
+    { href: "/transactions", label: t.transactions as NavLabel, icon: History },
+    { href: "/withdraw", label: t.withdraw as NavLabel, icon: Send },
+    { href: "/platforms", label: t.platforms as NavLabel, icon: Gamepad2 },
+    { href: "/settings", label: t.settings as NavLabel, icon: Settings },
   ];
 
   if (user.isAdmin || user.isSuperAdmin) {
-    navItems.push({ href: "/admin/dashboard", label: t.adminPanel, icon: ShieldAlert });
+    navItems.push({ href: "/admin/dashboard", label: t.adminPanel as NavLabel, icon: ShieldAlert });
   }
 
   const NavLinks = ({ closeSheet }: { closeSheet?: () => void }) => (
     <>
       {navItems.map((item) => (
         <Link key={item.href} href={item.href} onClick={closeSheet}>
-          <div
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all cursor-pointer text-sm font-medium ${
-              location === item.href
-                ? "bg-primary/10 text-primary border border-primary/20 shadow-[0_0_8px_rgba(0,255,135,0.08)]"
-                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-            }`}
-          >
+          <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all cursor-pointer text-sm font-medium ${
+            location === item.href
+              ? "bg-primary/15 text-primary border border-primary/25"
+              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          }`}>
             <item.icon className={`h-4 w-4 shrink-0 ${location === item.href ? "text-primary" : ""}`} />
             {item.label}
             {item.href === "/admin/dashboard" && (
@@ -117,14 +116,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* Sidebar Desktop */}
       <aside className="hidden md:flex flex-col w-60 border-r border-border bg-card shrink-0">
         <div className="p-5 border-b border-border">
-          <div className="flex items-center justify-between gap-3">
-            <Link href="/">
-              <h1 className="text-xl font-bold text-primary tracking-tight cursor-pointer drop-shadow-[0_0_10px_rgba(0,255,135,0.3)]">
-                GAME<span className="text-white">REWARDS</span>
-              </h1>
-            </Link>
-            <Button variant="outline" size="sm" onClick={() => setLanguage(language === "en" ? "ar" : "en")} className="gap-2">
-              <Languages className="h-4 w-4" />
+          <div className="flex items-center justify-between gap-2">
+            <Link href="/"><CachvioLogo /></Link>
+            <Button variant="outline" size="sm" onClick={() => setLanguage(language === "en" ? "ar" : "en")} className="gap-1 h-8 px-2 text-xs">
+              <Languages className="h-3 w-3" />
               {language === "en" ? "AR" : "EN"}
             </Button>
           </div>
@@ -137,14 +132,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <p className="text-xs text-muted-foreground truncate">{user.email}</p>
             <p className="text-xs font-bold text-white mt-0.5 truncate">{user.username}</p>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start text-destructive hover:bg-destructive/10 hover:text-destructive"
-            onClick={handleLogout}
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            {t.logout}
+          <Button variant="ghost" size="sm" className="w-full justify-start text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={handleLogout}>
+            <LogOut className="h-4 w-4 mr-2" />{t.logout}
           </Button>
         </div>
       </aside>
@@ -153,56 +142,52 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <main className="flex-1 flex flex-col min-w-0">
         {/* Mobile Header */}
         <header className="md:hidden flex items-center justify-between p-4 border-b border-border bg-card sticky top-0 z-50">
-          <Link href="/">
-            <h1 className="text-lg font-bold text-primary tracking-tight cursor-pointer drop-shadow-[0_0_10px_rgba(0,255,135,0.3)]">
-              GAME<span className="text-white">REWARDS</span>
-            </h1>
-          </Link>
-          <Button variant="outline" size="sm" onClick={() => setLanguage(language === "en" ? "ar" : "en")} className="gap-2">
-            <Languages className="h-4 w-4" />
-            {language === "en" ? "AR" : "EN"}
-          </Button>
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-60 p-0 bg-card border-border">
-              <div className="p-5 border-b border-border">
-                <div className="flex items-center justify-between gap-3">
-                  <h1 className="text-xl font-bold text-primary tracking-tight drop-shadow-[0_0_10px_rgba(0,255,135,0.3)]">
-                    GAME<span className="text-white">REWARDS</span>
-                  </h1>
-                  <Button variant="outline" size="sm" onClick={() => setLanguage(language === "en" ? "ar" : "en")} className="gap-2">
-                    <Languages className="h-4 w-4" />
-                    {language === "en" ? "AR" : "EN"}
+          <Link href="/"><CachvioLogo /></Link>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setLanguage(language === "en" ? "ar" : "en")} className="gap-1 h-8 px-2 text-xs">
+              <Languages className="h-3 w-3" />
+              {language === "en" ? "AR" : "EN"}
+            </Button>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon"><Menu className="h-5 w-5" /></Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-60 p-0 bg-card border-border">
+                <div className="p-5 border-b border-border">
+                  <CachvioLogo />
+                </div>
+                <nav className="p-3 flex flex-col gap-1">
+                  <NavLinks />
+                </nav>
+                <div className="p-3 border-t border-border">
+                  <div className="px-3 py-2 rounded-lg bg-accent/50 mb-2">
+                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                    <p className="text-xs font-bold text-white mt-0.5">{user.username}</p>
+                  </div>
+                  <Button variant="ghost" size="sm" className="w-full justify-start text-destructive hover:bg-destructive/10" onClick={handleLogout}>
+                    <LogOut className="h-4 w-4 mr-2" />{t.logout}
                   </Button>
                 </div>
-              </div>
-              <nav className="p-3 flex flex-col gap-1">
-                <NavLinks />
-              </nav>
-              <div className="p-3 border-t border-border">
-                <div className="px-3 py-2 rounded-lg bg-accent/50 mb-2">
-                  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-                  <p className="text-xs font-bold text-white mt-0.5">{user.username}</p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-start text-destructive hover:bg-destructive/10"
-                  onClick={handleLogout}
-                >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  {t.logout}
-                </Button>
-              </div>
-            </SheetContent>
-          </Sheet>
+              </SheetContent>
+            </Sheet>
+          </div>
         </header>
 
-        <div className="flex-1 p-6 overflow-auto">
+        {/* Bottom Nav Mobile */}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-border flex items-center justify-around py-2 px-1">
+          {navItems.slice(0, 5).map((item) => (
+            <Link key={item.href} href={item.href}>
+              <div className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                location === item.href ? "text-primary" : "text-muted-foreground"
+              }`}>
+                <item.icon className="h-5 w-5" />
+                <span className="text-[9px] font-bold">{typeof item.label === 'string' && item.label.split(' ')[0]}</span>
+              </div>
+            </Link>
+          ))}
+        </nav>
+
+        <div className="flex-1 p-4 md:p-6 overflow-auto pb-20 md:pb-6">
           {children}
         </div>
       </main>
