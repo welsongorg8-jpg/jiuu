@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { platformsTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { requireAuth, requireAdmin } from "../lib/auth";
 import { CreatePlatformBody, UpdatePlatformBody } from "@workspace/api-zod";
 
@@ -26,6 +26,22 @@ function formatPlatformAdmin(p: typeof platformsTable.$inferSelect) {
     secretKey: p.secretKey,
   };
 }
+
+// PUBLIC: get featured platform (placement === "homepage") — no auth required
+router.get("/platforms/featured", async (_req, res) => {
+  const [platform] = await db
+    .select()
+    .from(platformsTable)
+    .where(and(eq(platformsTable.isEnabled, true), eq(platformsTable.placement, "homepage")))
+    .limit(1);
+
+  if (!platform) {
+    res.json({ platform: null });
+    return;
+  }
+
+  res.json({ platform: formatPlatform(platform) });
+});
 
 router.get("/platforms", requireAuth, async (_req, res) => {
   const platforms = await db
