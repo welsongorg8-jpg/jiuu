@@ -19,14 +19,12 @@ const adminNavItems = [
 function CachvioLogo() {
   return (
     <div className="flex items-center gap-2">
-      <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center shadow-[0_0_10px_rgba(249,115,22,0.4)]">
+      <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center shadow-[0_2px_8px_rgba(249,115,22,0.35)]">
         <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4">
           <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="white" strokeLinejoin="round"/>
         </svg>
       </div>
-      <span className="text-lg font-black tracking-tight text-white">
-        Cach<span className="text-primary">vio</span>
-      </span>
+      <span className="text-lg font-black tracking-tight text-foreground">Cach<span className="text-primary">vio</span></span>
     </div>
   );
 }
@@ -54,23 +52,16 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
   if (!user.isAdmin && !user.isSuperAdmin) return null;
 
-  const handleLogout = () => {
-    removeToken();
-    queryClient.clear();
-    setLocation("/login");
-  };
+  const handleLogout = () => { removeToken(); queryClient.clear(); setLocation("/login"); };
 
   const NavLinks = ({ closeSheet }: { closeSheet?: () => void }) => (
     <>
       {adminNavItems.map((item) => (
         <Link key={item.href} href={item.href} onClick={closeSheet}>
           <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all cursor-pointer text-sm font-medium ${
-            location === item.href
-              ? "bg-primary text-white shadow-[0_0_10px_rgba(249,115,22,0.3)]"
-              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            location === item.href ? "bg-primary text-white shadow-[0_2px_8px_rgba(249,115,22,0.25)]" : "text-muted-foreground hover:bg-secondary hover:text-foreground"
           }`}>
-            <item.icon className="h-4 w-4 shrink-0" />
-            {item.label}
+            <item.icon className="h-4 w-4 shrink-0" />{item.label}
           </div>
         </Link>
       ))}
@@ -79,8 +70,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen flex w-full bg-background text-foreground">
-      {/* Sidebar Desktop */}
-      <aside className="hidden lg:flex flex-col w-60 border-r border-border bg-card shrink-0">
+      <aside className="hidden lg:flex flex-col w-60 border-r border-border bg-sidebar shrink-0">
         <div className="p-5 border-b border-border">
           <Link href="/"><CachvioLogo /></Link>
           <div className="mt-2 flex items-center gap-1.5">
@@ -88,20 +78,16 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             <span className="text-[11px] text-primary font-bold uppercase tracking-widest">Admin Panel</span>
           </div>
         </div>
-        <nav className="flex-1 p-3 flex flex-col gap-1 overflow-y-auto">
-          <NavLinks />
-        </nav>
+        <nav className="flex-1 p-3 flex flex-col gap-1 overflow-y-auto"><NavLinks /></nav>
         <div className="p-3 border-t border-border space-y-2">
           <Link href="/dashboard">
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer">
               <ChevronLeft className="h-4 w-4" />Back to App
             </div>
           </Link>
-          <div className="px-3 py-2 rounded-lg bg-accent/50">
+          <div className="px-3 py-2 rounded-lg bg-secondary">
             <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-            <p className="text-xs font-bold text-primary uppercase tracking-wider">
-              {user.isSuperAdmin ? "Super Admin" : "Admin"}
-            </p>
+            <p className="text-xs font-bold text-primary uppercase tracking-wider">{user.isSuperAdmin ? "Super Admin" : "Admin"}</p>
           </div>
           <Button variant="ghost" size="sm" className="w-full justify-start text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={handleLogout}>
             <LogOut className="h-4 w-4 mr-2" />Logout
@@ -109,18 +95,15 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      {/* Main */}
       <main className="flex-1 flex flex-col min-w-0">
-        <header className="lg:hidden flex items-center justify-between p-4 border-b border-border bg-card sticky top-0 z-50">
+        <header className="lg:hidden flex items-center justify-between p-4 border-b border-border bg-sidebar sticky top-0 z-50">
           <div className="flex items-center gap-2">
             <CachvioLogo />
             <span className="text-[10px] text-primary font-bold uppercase tracking-widest hidden sm:block">Admin</span>
           </div>
           <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon"><Menu className="h-5 w-5" /></Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-60 p-0 bg-card border-border">
+            <SheetTrigger asChild><Button variant="ghost" size="icon"><Menu className="h-5 w-5" /></Button></SheetTrigger>
+            <SheetContent side="left" className="w-60 p-0 bg-sidebar border-border">
               <div className="p-5 border-b border-border">
                 <CachvioLogo />
                 <div className="mt-2 flex items-center gap-1.5">
@@ -128,12 +111,10 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                   <span className="text-[11px] text-primary font-bold uppercase tracking-widest">Admin Panel</span>
                 </div>
               </div>
-              <nav className="p-3 flex flex-col gap-1">
-                <NavLinks />
-              </nav>
+              <nav className="p-3 flex flex-col gap-1"><NavLinks /></nav>
               <div className="p-3 border-t border-border">
                 <Link href="/dashboard">
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-accent cursor-pointer">
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary cursor-pointer">
                     <ChevronLeft className="h-4 w-4" />Back to App
                   </div>
                 </Link>
@@ -144,9 +125,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
             </SheetContent>
           </Sheet>
         </header>
-        <div className="flex-1 p-4 md:p-6 overflow-auto">
-          {children}
-        </div>
+        <div className="flex-1 p-4 md:p-6 overflow-auto">{children}</div>
       </main>
     </div>
   );
