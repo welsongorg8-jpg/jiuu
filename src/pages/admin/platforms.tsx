@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Copy, Check, Trash2, Link2 } from "lucide-react";
+import { Loader2, Plus, Copy, Check, Trash2, Link2, Globe, Star } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -27,7 +27,7 @@ function PostbackUrl({ platformId }: { platformId: number }) {
 
   return (
     <div className="flex items-center gap-1.5">
-      <code className="text-xs font-mono text-primary truncate max-w-[220px]">{url.slice(0, 40)}…</code>
+      <code className="text-xs font-mono text-primary truncate max-w-[200px]">{url.slice(0, 38)}…</code>
       <button onClick={copy} className="shrink-0 text-muted-foreground hover:text-primary transition-colors">
         {copied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
       </button>
@@ -38,6 +38,7 @@ function PostbackUrl({ platformId }: { platformId: number }) {
 export default function AdminPlatforms() {
   const { data, isLoading } = useListAllPlatforms();
   const queryClient = useQueryClient();
+  const updatePlatform = useUpdatePlatform();
   const deletePlatform = useDeletePlatform();
   const { toast } = useToast();
 
@@ -52,85 +53,142 @@ export default function AdminPlatforms() {
     });
   };
 
+  const handleSetFeatured = (id: number, name: string, currentPlacement: string) => {
+    const newPlacement = currentPlacement === "homepage" ? "dedicated" : "homepage";
+    const action = newPlacement === "homepage" ? "featured on landing page" : "removed from landing page";
+
+    updatePlatform.mutate(
+      { platformId: id, data: { placement: newPlacement as any } },
+      {
+        onSuccess: () => {
+          toast({ title: newPlacement === "homepage" ? `"${name}" is now featured on the landing page!` : `"${name}" removed from landing page` });
+          queryClient.invalidateQueries({ queryKey: getListAllPlatformsQueryKey() });
+        },
+        onError: () => toast({ variant: "destructive", title: `Failed to update placement` }),
+      }
+    );
+  };
+
+  const featuredPlatform = data?.platforms?.find((p: any) => p.placement === "homepage");
+
   return (
     <Layout>
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between gap-4 sm:items-center">
           <div>
-            <h2 className="text-3xl font-black tracking-tight uppercase text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">Offerwalls</h2>
-            <p className="text-muted-foreground">Manage offerwall platforms. Each platform gets a unique postback URL.</p>
+            <h2 className="text-2xl font-black tracking-tight text-foreground">Offerwalls</h2>
+            <p className="text-muted-foreground text-sm">Manage offerwall platforms. Each gets a unique postback URL.</p>
           </div>
           <PlatformDialog />
         </div>
 
-        {/* Postback info box */}
-        <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 space-y-2">
+        {/* Featured platform info */}
+        <div className={`rounded-xl p-4 border flex items-start gap-3 ${featuredPlatform ? "bg-orange-50 border-primary/25" : "bg-card border-border"}`}>
+          <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${featuredPlatform ? "bg-primary/15 border border-primary/25" : "bg-muted border border-border"}`}>
+            <Globe className={`h-4 w-4 ${featuredPlatform ? "text-primary" : "text-muted-foreground"}`} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className={`font-bold text-sm ${featuredPlatform ? "text-primary" : "text-foreground"}`}>
+              {featuredPlatform ? `Featured on Landing Page: "${featuredPlatform.name}"` : "No Platform Featured on Landing Page"}
+            </h4>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {featuredPlatform
+                ? "This platform appears in an iframe on the landing page. Visitors can use it before signing up. Click the star icon to change or remove it."
+                : "Click the star icon next to any platform to feature it on the landing page inside an iframe for visitors."}
+            </p>
+          </div>
+        </div>
+
+        {/* Postback info */}
+        <div className="bg-card border border-border rounded-xl p-4 space-y-2">
           <div className="flex items-center gap-2 mb-1">
             <Link2 className="h-4 w-4 text-primary" />
-            <h4 className="font-bold text-white text-sm">How automatic crediting works</h4>
+            <h4 className="font-bold text-foreground text-sm">How Automatic Crediting Works</h4>
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed">
             Each platform has a unique <span className="text-primary font-mono font-semibold">Postback URL</span>.
-            Copy it and paste it in the offerwall's dashboard as the postback/callback URL.
-            When a user completes an offer, the offerwall calls this URL and the user's balance is credited automatically.
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Set a <span className="text-primary font-semibold">Secret Key</span> in the platform settings — the same one you enter in the offerwall dashboard — to validate that postbacks are genuine.
+            Paste it in the offerwall's dashboard. When a user completes an offer, the offerwall calls this URL and the user's balance is credited automatically.
           </p>
         </div>
 
-        <Card className="bg-card border-border">
+        <Card className="bg-card border-border shadow-sm">
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="bg-accent">
+                <TableHeader className="bg-muted/50">
                   <TableRow className="border-border">
-                    <TableHead>Name</TableHead>
-                    <TableHead>Postback URL</TableHead>
-                    <TableHead>Offer URL</TableHead>
-                    <TableHead>Placement</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="font-bold">Name</TableHead>
+                    <TableHead className="font-bold">Postback URL</TableHead>
+                    <TableHead className="font-bold">Offer URL</TableHead>
+                    <TableHead className="font-bold">Status</TableHead>
+                    <TableHead className="font-bold text-center">Featured</TableHead>
+                    <TableHead className="text-right font-bold">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {isLoading ? (
-                    <TableRow><TableCell colSpan={6} className="text-center py-8"><Loader2 className="animate-spin h-6 w-6 mx-auto text-primary" /></TableCell></TableRow>
-                  ) : data?.platforms?.map((p: any) => (
-                    <TableRow key={p.id} className="border-border">
-                      <TableCell className="font-bold text-white">{p.name}</TableCell>
-                      <TableCell><PostbackUrl platformId={p.id} /></TableCell>
-                      <TableCell>
-                        {p.apiEndpoint ? (
-                          <span className="text-xs font-mono text-muted-foreground truncate block max-w-[140px]">
-                            {p.apiEndpoint.slice(0, 30)}{p.apiEndpoint.length > 30 ? "…" : ""}
-                          </span>
-                        ) : <span className="text-muted-foreground text-sm">—</span>}
-                      </TableCell>
-                      <TableCell className="uppercase text-xs text-muted-foreground">{p.placement}</TableCell>
-                      <TableCell>
-                        <Badge variant={p.isEnabled ? 'default' : 'secondary'} className={p.isEnabled ? "shadow-[0_0_6px_rgba(0,255,135,0.3)]" : ""}>
-                          {p.isEnabled ? 'Active' : 'Disabled'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <PlatformDialog platform={p} />
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-destructive hover:bg-destructive/10 hover:text-destructive h-8 w-8 p-0"
-                            onClick={() => handleDelete(p.id, p.name)}
+                    <TableRow><TableCell colSpan={6} className="text-center py-10"><Loader2 className="animate-spin h-6 w-6 mx-auto text-primary" /></TableCell></TableRow>
+                  ) : data?.platforms?.map((p: any) => {
+                    const isFeatured = p.placement === "homepage";
+                    return (
+                      <TableRow key={p.id} className={`border-border transition-colors ${isFeatured ? "bg-orange-50/60 hover:bg-orange-50" : "hover:bg-muted/30"}`}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {p.logoUrl && <img src={p.logoUrl} alt={p.name} className="w-6 h-6 rounded object-cover border border-border" />}
+                            <span className="font-bold text-foreground">{p.name}</span>
+                            {isFeatured && (
+                              <span className="text-[10px] bg-primary text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">Featured</span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell><PostbackUrl platformId={p.id} /></TableCell>
+                        <TableCell>
+                          {p.apiEndpoint ? (
+                            <span className="text-xs font-mono text-muted-foreground truncate block max-w-[130px]">
+                              {p.apiEndpoint.slice(0, 28)}{p.apiEndpoint.length > 28 ? "…" : ""}
+                            </span>
+                          ) : <span className="text-muted-foreground text-sm">—</span>}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={p.isEnabled ? 'default' : 'secondary'} className={p.isEnabled ? "bg-green-100 text-green-700 border-green-200 hover:bg-green-100" : ""}>
+                            {p.isEnabled ? 'Active' : 'Disabled'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <button
+                            onClick={() => handleSetFeatured(p.id, p.name, p.placement)}
+                            disabled={updatePlatform.isPending}
+                            title={isFeatured ? "Remove from landing page" : "Set as featured on landing page"}
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center mx-auto transition-all duration-200 ${
+                              isFeatured
+                                ? "bg-primary text-white shadow-[0_2px_8px_rgba(249,115,22,0.3)]"
+                                : "bg-muted text-muted-foreground hover:bg-primary/15 hover:text-primary"
+                            }`}
                           >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                            <Star className={`h-4 w-4 ${isFeatured ? "fill-white" : ""}`} />
+                          </button>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <PlatformDialog platform={p} />
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:bg-destructive/10 hover:text-destructive h-8 w-8 p-0"
+                              onClick={() => handleDelete(p.id, p.name)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                   {(!data?.platforms || data.platforms.length === 0) && !isLoading && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">No platforms yet. Add your first offerwall above.</TableCell>
+                      <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
+                        No platforms yet. Add your first offerwall above.
+                      </TableCell>
                     </TableRow>
                   )}
                 </TableBody>
@@ -179,9 +237,9 @@ function PlatformDialog({ platform }: { platform?: any }) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {platform ? (
-          <Button variant="outline" size="sm" className="bg-primary/10 text-primary border-primary/20 hover:bg-primary hover:text-black">Edit</Button>
+          <Button variant="outline" size="sm" className="border-border hover:border-primary/40 hover:text-primary text-xs h-8">Edit</Button>
         ) : (
-          <Button className="bg-primary text-black font-bold hover:bg-primary/90">
+          <Button className="bg-primary text-white font-bold hover:bg-primary/90">
             <Plus className="mr-2 h-4 w-4" /> Add Offerwall
           </Button>
         )}
@@ -193,73 +251,46 @@ function PlatformDialog({ platform }: { platform?: any }) {
         <div className="space-y-4 py-2">
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Platform Name *</Label>
-            <Input placeholder="e.g. MyChips" value={name} onChange={e => setName(e.target.value)} className="bg-background" />
+            <Input placeholder="e.g. OfferToro" value={name} onChange={e => setName(e.target.value)} />
           </div>
-
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Description</Label>
-            <Input placeholder="Short description" value={description} onChange={e => setDescription(e.target.value)} className="bg-background" />
+            <Input placeholder="Short description" value={description} onChange={e => setDescription(e.target.value)} />
           </div>
-
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Offer Wall URL</Label>
-            <Input
-              placeholder="https://mychips.com/wall?uid={USER_ID}"
-              value={apiEndpoint}
-              onChange={e => setApiEndpoint(e.target.value)}
-              className="bg-background font-mono text-sm"
-            />
-            <p className="text-xs text-muted-foreground">
-              Use <code className="text-primary">{"{USER_ID}"}</code> as a placeholder — it will be replaced with the user's ID automatically.
-            </p>
+            <Input placeholder="https://example.com/wall?uid={USER_ID}" value={apiEndpoint} onChange={e => setApiEndpoint(e.target.value)} className="font-mono text-sm" />
+            <p className="text-xs text-muted-foreground">Use <code className="text-primary">{"{USER_ID}"}</code> as a placeholder — it will be replaced automatically.</p>
           </div>
-
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Secret Key</Label>
-            <Input
-              placeholder="Enter the secret key from the offerwall dashboard"
-              value={secretKey}
-              onChange={e => setSecretKey(e.target.value)}
-              className="bg-background font-mono text-sm"
-            />
-            <p className="text-xs text-muted-foreground">
-              Enter the same secret key configured in the offerwall's postback settings. Used to verify postback requests are genuine.
-            </p>
+            <Input placeholder="Secret key from offerwall dashboard" value={secretKey} onChange={e => setSecretKey(e.target.value)} className="font-mono text-sm" />
           </div>
-
           {platform && (
-            <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 space-y-1.5">
+            <div className="bg-orange-50 border border-primary/20 rounded-lg p-3 space-y-1.5">
               <Label className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Postback URL</Label>
               <PostbackUrl platformId={platform.id} />
-              <p className="text-xs text-muted-foreground">Copy this URL and paste it in the offerwall's postback/callback settings.</p>
+              <p className="text-xs text-muted-foreground">Paste this URL in the offerwall's postback settings.</p>
             </div>
           )}
-
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Logo URL</Label>
-            <Input placeholder="https://..." value={logoUrl} onChange={e => setLogoUrl(e.target.value)} className="bg-background font-mono text-sm" />
+            <Input placeholder="https://..." value={logoUrl} onChange={e => setLogoUrl(e.target.value)} className="font-mono text-sm" />
           </div>
-
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Placement</Label>
-            <select
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              value={placement} onChange={e => setPlacement(e.target.value)}
-            >
+            <select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={placement} onChange={e => setPlacement(e.target.value)}>
               <option value="dedicated">Dedicated Page</option>
-              <option value="homepage">Homepage</option>
+              <option value="homepage">Featured on Homepage (Landing Page iframe)</option>
               <option value="sidebar">Sidebar</option>
             </select>
+            {placement === "homepage" && <p className="text-xs text-primary font-medium">This platform will appear in an iframe on the landing page for all visitors.</p>}
           </div>
-
           <div className="flex items-center gap-3 py-1">
             <Switch id="enabled" checked={isEnabled} onCheckedChange={setIsEnabled} />
-            <Label htmlFor="enabled" className="cursor-pointer">
-              {isEnabled ? "Platform is Active" : "Platform is Disabled"}
-            </Label>
+            <Label htmlFor="enabled" className="cursor-pointer">{isEnabled ? "Platform is Active" : "Platform is Disabled"}</Label>
           </div>
-
-          <Button onClick={handleSave} disabled={isPending || !name} className="w-full bg-primary text-black font-bold hover:bg-primary/90">
+          <Button onClick={handleSave} disabled={isPending || !name} className="w-full bg-primary text-white font-bold hover:bg-primary/90">
             {isPending ? <Loader2 className="animate-spin h-4 w-4" /> : (platform ? "Save Changes" : "Create Platform")}
           </Button>
         </div>
