@@ -1,155 +1,245 @@
 import { Link } from "wouter";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, Zap, Coins, Shield, Clock, TrendingUp, Star, Gamepad2, CheckCircle2, Globe, Award } from "lucide-react";
+import { ChevronRight, Zap, Coins, Shield, Clock, TrendingUp, Star, Gamepad2, CheckCircle2, Globe, Award, Maximize2, X } from "lucide-react";
 
 const stats = [
   { value: "$2.4M+", label: "Total Paid Out" },
   { value: "85K+", label: "Active Users" },
   { value: "5+", label: "Offerwall Partners" },
-  { value: "<24h", label: "Avg Withdrawal Time" },
+  { value: "<24h", label: "Avg Withdrawal" },
 ];
 
 const features = [
-  { icon: Gamepad2, title: "5+ Premium Offerwalls", desc: "OfferToro, CPX Research, Lootably, Adgate Media, BitLabs — all in one place." },
-  { icon: Coins, title: "Instant USDT Payouts", desc: "Withdraw directly to your crypto wallet via BEP20 or TRC20 with no hidden fees." },
-  { icon: Zap, title: "Real-Time Balance", desc: "Your earnings appear instantly the moment an offer is credited to your account." },
-  { icon: Shield, title: "Secure & Verified", desc: "Every withdrawal is manually reviewed for security before processing." },
+  { icon: Gamepad2, title: "5+ Premium Offerwalls", desc: "OfferToro, CPX Research, Lootably, Adgate Media, BitLabs — all in one platform." },
+  { icon: Coins, title: "Instant USDT Payouts", desc: "Withdraw to BEP20 or TRC20 wallets with zero hidden fees." },
+  { icon: Zap, title: "Real-Time Balance", desc: "Earnings appear the moment an offer is credited to your account." },
+  { icon: Shield, title: "Verified & Secure", desc: "Every withdrawal is reviewed before processing to keep you safe." },
   { icon: Clock, title: "Fast Processing", desc: "Most withdrawals are processed within 24 hours of approval." },
   { icon: TrendingUp, title: "No Earning Cap", desc: "Complete unlimited offers and grow your balance as high as you want." },
 ];
 
 const testimonials = [
-  { name: "ProGamer_99", amount: "$320 withdrawn", text: "Cashed out three times already. Always fast and always accurate. Best GPT site I've used." },
-  { name: "CryptoKing88", amount: "$150 withdrawn", text: "The UI is clean and the USDT payouts are real. No shady business, just straight earnings." },
-  { name: "OfferHunter", amount: "$500+ withdrawn", text: "Been here since day one. The offerwalls actually pay and support is responsive." },
+  { name: "ProGamer_99", amount: "$320 withdrawn", text: "Cashed out three times already. Always fast and accurate. Best GPT site I've used." },
+  { name: "CryptoKing88", amount: "$150 withdrawn", text: "The UI is clean, USDT payouts are real. No shady business, just straight earnings." },
+  { name: "OfferHunter", amount: "$500+ withdrawn", text: "Been here since day one. The offerwalls pay and support is responsive." },
 ];
 
 const steps = [
-  { num: "01", icon: Gamepad2, title: "Choose Offers", desc: "Browse our premium offerwalls and select the games and tasks that pay the most." },
-  { num: "02", icon: Zap, title: "Complete & Earn", desc: "Reach specific levels or finish tasks. Your balance grows instantly upon completion." },
-  { num: "03", icon: Coins, title: "Withdraw Crypto", desc: "Request USDT via BEP20 or TRC20. Processed within 24 hours, straight to your wallet." },
+  { num: "01", icon: Gamepad2, title: "Choose an Offer", desc: "Browse our premium offerwalls and select the games and tasks that pay the most." },
+  { num: "02", icon: Zap, title: "Complete & Earn", desc: "Finish tasks or reach game levels. Your balance updates instantly upon completion." },
+  { num: "03", icon: Coins, title: "Withdraw Crypto", desc: "Request USDT via BEP20 or TRC20. Processed within 24 hours to your wallet." },
 ];
+
+const partners = ["OfferToro", "CPX Research", "Lootably", "Adgate Media", "BitLabs"];
 
 function CachvioLogo({ className = "" }: { className?: string }) {
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-[0_0_12px_rgba(249,115,22,0.5)]">
+      <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-[0_2px_8px_rgba(249,115,22,0.35)]">
         <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5">
           <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="white" strokeLinejoin="round"/>
         </svg>
       </div>
-      <span className="text-xl font-black tracking-tight text-white">
+      <span className="text-xl font-black tracking-tight text-foreground">
         Cach<span className="text-primary">vio</span>
       </span>
     </div>
   );
 }
 
+function FeaturedPlatformSection() {
+  const [featured, setFeatured] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/platforms/featured")
+      .then(r => r.json())
+      .then(d => { setFeatured(d.platform); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+
+  if (loading || !featured || !featured.apiEndpoint) return null;
+
+  return (
+    <section className="py-16 px-4 bg-white border-y border-border">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-1.5 text-sm text-primary font-bold mb-3">
+            <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+            Live Now — Start Earning Instantly
+          </div>
+          <h2 className="text-3xl md:text-4xl font-black tracking-tight text-foreground mb-2">
+            {featured.name}
+          </h2>
+          {featured.description && (
+            <p className="text-muted-foreground max-w-xl mx-auto">{featured.description}</p>
+          )}
+        </div>
+
+        <div className={`relative rounded-2xl border-2 border-primary/20 overflow-hidden shadow-[0_8px_40px_rgba(249,115,22,0.12)] transition-all duration-300 ${expanded ? "h-[85vh]" : "h-[520px]"}`}>
+          {/* Top bar */}
+          <div className="flex items-center justify-between px-4 py-2.5 bg-primary text-white">
+            <div className="flex items-center gap-2">
+              {featured.logoUrl && (
+                <img src={featured.logoUrl} alt={featured.name} className="w-6 h-6 rounded object-cover" />
+              )}
+              <span className="font-bold text-sm">{featured.name}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs opacity-80 hidden sm:block">Sign up and start earning — it's free</span>
+              <button
+                onClick={() => setExpanded(e => !e)}
+                className="p-1.5 rounded-md hover:bg-white/20 transition-colors"
+                title={expanded ? "Collapse" : "Expand"}
+              >
+                {expanded ? <X className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+
+          {/* Iframe */}
+          <iframe
+            src={featured.apiEndpoint}
+            className="w-full border-0"
+            style={{ height: "calc(100% - 44px)" }}
+            allow="fullscreen"
+            title={featured.name}
+          />
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-5 bg-orange-50 border border-primary/20 rounded-xl p-4">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <Zap className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <p className="font-bold text-foreground text-sm">Instant Credit</p>
+              <p className="text-muted-foreground text-xs">Complete an offer above and your Cachvio balance updates automatically.</p>
+            </div>
+          </div>
+          <Link href="/register">
+            <Button className="bg-primary text-white font-bold shrink-0 shadow-[0_2px_12px_rgba(249,115,22,0.3)]">
+              Create Free Account <ChevronRight className="ml-1 h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
+    <div className="min-h-screen bg-white text-foreground overflow-x-hidden">
       {/* Navbar */}
-      <nav className="fixed top-0 w-full z-50 border-b border-border/50 bg-background/90 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
+      <nav className="fixed top-0 w-full z-50 border-b border-border bg-white/95 backdrop-blur-xl shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex justify-between items-center">
           <CachvioLogo />
-          <div className="hidden sm:flex gap-6 text-sm text-muted-foreground items-center">
+          <div className="hidden md:flex gap-7 text-sm text-muted-foreground items-center">
             <a href="#how-it-works" className="hover:text-primary transition-colors font-medium">How It Works</a>
             <a href="#features" className="hover:text-primary transition-colors font-medium">Features</a>
-            <a href="#testimonials" className="hover:text-primary transition-colors font-medium">Reviews</a>
+            <a href="#reviews" className="hover:text-primary transition-colors font-medium">Reviews</a>
           </div>
-          <div className="flex gap-2 sm:gap-3 items-center">
+          <div className="flex gap-2 items-center">
             <Link href="/login">
-              <Button variant="ghost" className="hover:text-primary font-semibold text-sm px-3">Login</Button>
+              <Button variant="ghost" className="font-semibold text-sm text-foreground hover:text-primary">Login</Button>
             </Link>
             <Link href="/register">
-              <Button className="bg-primary text-white hover:bg-primary/90 font-bold shadow-[0_0_15px_rgba(249,115,22,0.35)] text-sm px-4">
-                Start Free
+              <Button className="bg-primary text-white font-bold shadow-[0_2px_10px_rgba(249,115,22,0.3)] text-sm">
+                Sign Up Free
               </Button>
             </Link>
           </div>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="relative pt-36 pb-24 md:pt-52 md:pb-36 flex flex-col items-center justify-center text-center px-4 overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/10 blur-[130px] rounded-full pointer-events-none" />
-        <div className="absolute top-24 right-10 w-48 h-48 bg-orange-500/5 blur-[80px] rounded-full pointer-events-none" />
-        <div className="absolute bottom-20 left-10 w-56 h-56 bg-primary/8 blur-[70px] rounded-full pointer-events-none" />
+      {/* Hero — full-width orange gradient banner */}
+      <section className="relative pt-28 pb-20 md:pt-40 md:pb-28 bg-gradient-to-br from-orange-500 via-orange-400 to-amber-400 text-white overflow-hidden">
+        {/* Decorative blobs */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-72 h-72 bg-orange-600/30 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl pointer-events-none" />
+        {/* Grid pattern overlay */}
+        <div className="absolute inset-0 pointer-events-none opacity-10" style={{backgroundImage: 'linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px)', backgroundSize: '40px 40px'}} />
 
-        <div className="relative z-10 max-w-5xl space-y-6">
-          <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/25 rounded-full px-4 py-1.5 text-sm text-primary font-bold">
-            <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-            Live payouts — $2.4M+ paid out worldwide
+        <div className="relative z-10 max-w-5xl mx-auto px-4 text-center space-y-6">
+          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full px-4 py-1.5 text-sm font-bold">
+            <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+            $2.4M+ Paid Out to Real Users
           </div>
 
-          <h1 className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter leading-none">
-            Earn Real <span className="text-primary drop-shadow-[0_0_20px_rgba(249,115,22,0.4)]">USDT</span><br />
-            <span className="text-white">From Anywhere</span>
+          <h1 className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tighter leading-none drop-shadow-sm">
+            Earn Real <span className="bg-white/20 backdrop-blur-sm rounded-xl px-3 py-1">USDT</span><br />
+            From Your Phone
           </h1>
 
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Complete premium offers, play games, and instantly withdraw <span className="text-white font-semibold">USDT</span> directly to your crypto wallet — no limits, no tricks.
+          <p className="text-lg md:text-xl text-orange-50 max-w-2xl mx-auto leading-relaxed">
+            Complete premium offers, play games, and withdraw crypto directly to your wallet — no investment, no limits, no tricks.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
             <Link href="/register">
-              <Button size="lg" className="bg-primary text-white hover:bg-primary/90 font-bold text-lg px-10 h-14 shadow-[0_0_30px_rgba(249,115,22,0.45)] w-full sm:w-auto group">
-                Create Free Account
+              <Button size="lg" className="bg-white text-primary hover:bg-orange-50 font-black text-lg px-10 h-14 shadow-xl w-full sm:w-auto group border-0">
+                Start Earning Free
                 <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
             <Link href="/login">
-              <Button size="lg" variant="outline" className="h-14 px-8 font-bold text-lg border-border hover:border-primary/50 hover:text-primary w-full sm:w-auto">
-                Sign In
+              <Button size="lg" className="bg-white/15 backdrop-blur-sm border border-white/40 text-white hover:bg-white/25 font-bold h-14 px-8 w-full sm:w-auto">
+                I Have an Account
               </Button>
             </Link>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground pt-2">
-            <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-primary" /> Free to join</span>
-            <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-primary" /> No credit card</span>
-            <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-primary" /> Instant withdrawals</span>
+          <div className="flex flex-wrap items-center justify-center gap-5 text-sm text-orange-100 pt-1">
+            <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-white" /> Free to join</span>
+            <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-white" /> No credit card</span>
+            <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-white" /> Instant withdrawals</span>
           </div>
         </div>
       </section>
 
-      {/* Trust Banner */}
-      <section className="bg-primary/5 border-y border-primary/15 py-3 overflow-hidden">
-        <div className="flex items-center gap-12 animate-[marquee_20s_linear_infinite] whitespace-nowrap px-8">
-          {["OfferToro", "CPX Research", "Lootably", "Adgate Media", "BitLabs", "OfferToro", "CPX Research", "Lootably", "Adgate Media", "BitLabs"].map((p, i) => (
-            <span key={i} className="text-sm font-bold text-primary/70 uppercase tracking-widest flex-shrink-0">{p}</span>
+      {/* Partners marquee banner */}
+      <section className="bg-orange-50 border-b border-orange-100 py-3 overflow-hidden">
+        <div className="flex items-center gap-10 whitespace-nowrap px-4" style={{animation: 'marquee 18s linear infinite'}}>
+          {[...partners, ...partners].map((p, i) => (
+            <span key={i} className="text-xs font-black text-orange-400 uppercase tracking-[0.15em] flex-shrink-0">{p}</span>
           ))}
         </div>
       </section>
 
       {/* Stats Bar */}
-      <section className="bg-card border-b border-border py-12 px-4">
+      <section className="bg-white border-b border-border py-10 px-4">
         <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           {stats.map((s) => (
             <div key={s.label}>
-              <div className="text-3xl md:text-4xl font-black text-primary drop-shadow-[0_0_10px_rgba(249,115,22,0.35)]">{s.value}</div>
+              <div className="text-3xl md:text-4xl font-black text-primary">{s.value}</div>
               <div className="text-xs text-muted-foreground mt-1.5 uppercase tracking-widest font-bold">{s.label}</div>
             </div>
           ))}
         </div>
       </section>
 
+      {/* Featured Platform (from admin settings) */}
+      <FeaturedPlatformSection />
+
       {/* How it Works */}
-      <section id="how-it-works" className="py-24 px-4">
+      <section id="how-it-works" className="py-24 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
+          <div className="text-center mb-14">
             <span className="text-xs font-bold text-primary uppercase tracking-[0.2em] mb-3 block">Simple Process</span>
-            <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-4">How It Works</h2>
-            <p className="text-muted-foreground text-lg">Three simple steps to crypto in your wallet.</p>
+            <h2 className="text-3xl md:text-5xl font-black tracking-tight text-foreground mb-3">How It Works</h2>
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto">Three simple steps to get crypto in your wallet.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {steps.map((step) => (
-              <div key={step.num} className="bg-card border border-border p-8 rounded-2xl relative overflow-hidden group hover:border-primary/40 transition-all duration-300 hover:shadow-[0_0_30px_rgba(249,115,22,0.06)]">
-                <div className="absolute top-4 right-6 text-7xl font-black text-primary/6 select-none group-hover:text-primary/12 transition-colors">{step.num}</div>
+              <div key={step.num} className="bg-white border border-border rounded-2xl p-8 relative overflow-hidden group hover:border-primary/40 hover:shadow-[0_4px_24px_rgba(249,115,22,0.08)] transition-all duration-300">
+                <div className="absolute top-4 right-6 text-7xl font-black text-primary/6 select-none group-hover:text-primary/10 transition-colors">{step.num}</div>
                 <div className="bg-primary/10 w-14 h-14 rounded-xl flex items-center justify-center mb-6 border border-primary/20">
                   <step.icon className="w-7 h-7 text-primary" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">{step.title}</h3>
+                <h3 className="text-xl font-bold mb-3 text-foreground">{step.title}</h3>
                 <p className="text-muted-foreground leading-relaxed">{step.desc}</p>
               </div>
             ))}
@@ -158,21 +248,21 @@ export default function Landing() {
       </section>
 
       {/* Features Grid */}
-      <section id="features" className="py-24 bg-card border-y border-border px-4">
+      <section id="features" className="py-24 bg-orange-50/60 border-y border-orange-100 px-4">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
+          <div className="text-center mb-14">
             <span className="text-xs font-bold text-primary uppercase tracking-[0.2em] mb-3 block">Why Cachvio</span>
-            <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-4">Everything You Need</h2>
+            <h2 className="text-3xl md:text-5xl font-black tracking-tight text-foreground mb-3">Everything You Need</h2>
             <p className="text-muted-foreground text-lg">Built to maximize your earnings, secured and verified.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {features.map((f) => (
-              <div key={f.title} className="bg-background border border-border rounded-xl p-6 hover:border-primary/30 transition-all duration-200 group hover:shadow-[0_4px_20px_rgba(249,115,22,0.05)]">
+              <div key={f.title} className="bg-white border border-border rounded-xl p-6 hover:border-primary/30 hover:shadow-[0_4px_20px_rgba(249,115,22,0.07)] transition-all duration-200 group">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 group-hover:bg-primary/20 transition-colors">
                     <f.icon className="h-5 w-5 text-primary" />
                   </div>
-                  <h3 className="font-bold text-white">{f.title}</h3>
+                  <h3 className="font-bold text-foreground">{f.title}</h3>
                 </div>
                 <p className="text-muted-foreground text-sm leading-relaxed">{f.desc}</p>
               </div>
@@ -182,28 +272,28 @@ export default function Landing() {
       </section>
 
       {/* Global Reach Banner */}
-      <section className="py-16 px-4 bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-b border-border">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
+      <section className="py-14 px-4 bg-white border-b border-border">
+        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 bg-gradient-to-r from-primary/8 via-primary/5 to-primary/8 border border-primary/15 rounded-2xl p-8">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-primary/15 border border-primary/25 flex items-center justify-center">
-              <Globe className="w-7 h-7 text-primary" />
+            <div className="w-12 h-12 rounded-2xl bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0">
+              <Globe className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h3 className="text-xl font-black text-white">Available Worldwide</h3>
-              <p className="text-muted-foreground text-sm">Withdraw to any BEP20 or TRC20 wallet, anywhere in the world</p>
+              <h3 className="text-lg font-black text-foreground">Available Worldwide</h3>
+              <p className="text-muted-foreground text-sm">Withdraw to any BEP20 or TRC20 wallet, anywhere.</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-primary/15 border border-primary/25 flex items-center justify-center">
-              <Award className="w-7 h-7 text-primary" />
+            <div className="w-12 h-12 rounded-2xl bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0">
+              <Award className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h3 className="text-xl font-black text-white">Trusted Platform</h3>
-              <p className="text-muted-foreground text-sm">Verified payouts, transparent system, no hidden fees</p>
+              <h3 className="text-lg font-black text-foreground">Trusted Platform</h3>
+              <p className="text-muted-foreground text-sm">Transparent system, no hidden fees, verified payouts.</p>
             </div>
           </div>
           <Link href="/register">
-            <Button className="bg-primary text-white font-bold px-8 h-12 shadow-[0_0_20px_rgba(249,115,22,0.3)] shrink-0">
+            <Button className="bg-primary text-white font-bold px-8 h-11 shadow-[0_2px_12px_rgba(249,115,22,0.3)] shrink-0">
               Join Now <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
           </Link>
@@ -211,23 +301,23 @@ export default function Landing() {
       </section>
 
       {/* Testimonials */}
-      <section id="testimonials" className="py-24 px-4">
+      <section id="reviews" className="py-24 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
+          <div className="text-center mb-14">
             <span className="text-xs font-bold text-primary uppercase tracking-[0.2em] mb-3 block">Community</span>
-            <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-4">Users Trust Cachvio</h2>
-            <p className="text-muted-foreground text-lg">Real users, real withdrawals, real results.</p>
+            <h2 className="text-3xl md:text-5xl font-black tracking-tight text-foreground mb-3">Users Trust Cachvio</h2>
+            <p className="text-muted-foreground text-lg">Real users, real withdrawals.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {testimonials.map((t) => (
-              <div key={t.name} className="bg-card border border-border rounded-2xl p-6 hover:border-primary/30 transition-all duration-200 hover:shadow-[0_4px_20px_rgba(249,115,22,0.06)]">
+              <div key={t.name} className="bg-white border border-border rounded-2xl p-6 hover:border-primary/30 hover:shadow-[0_4px_20px_rgba(249,115,22,0.06)] transition-all duration-200">
                 <div className="flex items-center gap-1 mb-4">
                   {[1,2,3,4,5].map(i => <Star key={i} className="h-4 w-4 fill-primary text-primary" />)}
                 </div>
                 <p className="text-muted-foreground leading-relaxed mb-5 text-sm">"{t.text}"</p>
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="font-bold text-white text-sm">{t.name}</div>
+                    <div className="font-bold text-foreground text-sm">{t.name}</div>
                     <div className="text-xs text-primary font-bold mt-0.5">{t.amount}</div>
                   </div>
                   <div className="w-9 h-9 bg-primary/10 border border-primary/20 rounded-full flex items-center justify-center">
@@ -240,35 +330,31 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-28 px-4 relative overflow-hidden bg-card border-t border-border">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/12 via-transparent to-transparent pointer-events-none" />
+      {/* CTA Banner */}
+      <section className="py-24 px-4 bg-gradient-to-br from-orange-500 via-orange-400 to-amber-400 text-white relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none opacity-10" style={{backgroundImage: 'linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px)', backgroundSize: '40px 40px'}} />
         <div className="max-w-4xl mx-auto text-center relative z-10 space-y-6">
-          <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/25 rounded-full px-4 py-1.5 text-sm text-primary font-bold">
-            <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-            Join 85,000+ users worldwide
-          </div>
           <h2 className="text-4xl md:text-6xl font-black tracking-tighter">
-            Start Earning <span className="text-primary drop-shadow-[0_0_20px_rgba(249,115,22,0.4)]">Today</span>
+            Start Earning<br />Today — It's Free
           </h2>
-          <p className="text-xl text-muted-foreground max-w-xl mx-auto">Sign up free and start earning USDT within minutes. No investment required.</p>
+          <p className="text-xl text-orange-100 max-w-xl mx-auto">Join 85,000+ users already earning USDT. No investment required.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
             <Link href="/register">
-              <Button size="lg" className="bg-primary text-white hover:bg-primary/90 font-bold text-lg px-12 h-14 shadow-[0_0_35px_rgba(249,115,22,0.4)] w-full sm:w-auto">
+              <Button size="lg" className="bg-white text-primary hover:bg-orange-50 font-black text-lg px-12 h-14 shadow-xl w-full sm:w-auto border-0">
                 Create Free Account
               </Button>
             </Link>
             <Link href="/login">
-              <Button size="lg" variant="outline" className="h-14 px-10 font-bold border-border hover:border-primary/50 hover:text-primary w-full sm:w-auto">
+              <Button size="lg" className="bg-white/15 border border-white/40 text-white hover:bg-white/25 font-bold h-14 px-10 w-full sm:w-auto">
                 Sign In
               </Button>
             </Link>
           </div>
-          <p className="text-sm text-muted-foreground">Minimum withdrawal: $5 USDT · BEP20 & TRC20 supported</p>
+          <p className="text-sm text-orange-100">Minimum withdrawal: $5 USDT · BEP20 & TRC20 supported</p>
         </div>
       </section>
 
-      <footer className="border-t border-border bg-background py-10 px-4">
+      <footer className="border-t border-border bg-white py-10 px-4">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <CachvioLogo />
           <p className="text-muted-foreground text-sm">© {new Date().getFullYear()} Cachvio. All rights reserved.</p>
