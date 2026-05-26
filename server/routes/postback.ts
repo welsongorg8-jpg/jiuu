@@ -6,7 +6,7 @@ import {
   balancesTable,
   transactionsTable,
 } from "@workspace/db";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { logger } from "../lib/logger";
 
 const router = Router();
@@ -18,11 +18,12 @@ const router = Router();
  * Postback URL to enter in offerwall dashboard:
  *   https://YOUR_DOMAIN/api/postback/{platformId}?user_id={USER_ID}&amount={AMOUNT}&txid={TID}&secret=YOUR_SECRET_KEY
  *
- * Parameter aliases accepted:
- *   user_id  | uid | user
- *   amount   | reward | payout | coins
- *   txid     | transaction_id | offer_id | tid | oid
- *   secret   | hash | key | sig
+ * Each platform can override the param names via its admin settings:
+ *   paramUserId  — default: user_id  (also tries: uid, user)
+ *   paramAmount  — default: amount   (also tries: reward, payout, coins)
+ *   paramTxid    — default: txid     (also tries: transaction_id, offer_id, tid, oid)
+ *
+ * Built-in aliases are always checked as fallback so existing platforms are never broken.
  */
 router.get("/postback/:platformId", async (req, res) => {
   const platformId = parseInt(req.params.platformId as string);
@@ -30,26 +31,6 @@ router.get("/postback/:platformId", async (req, res) => {
   if (isNaN(platformId)) {
     logger.warn("Postback: invalid platformId");
     res.status(400).send("ERROR: Invalid platform");
-    return;
-  }
-
-  const q = req.query as Record<string, string>;
-
-  const userId   = q.user_id   ?? q.uid      ?? q.user   ?? "";
-  const rawAmt   = q.amount    ?? q.reward   ?? q.payout ?? q.coins ?? "";
-  const txid     = q.txid      ?? q.transaction_id ?? q.offer_id ?? q.tid ?? q.oid ?? "";
-  const secret   = q.secret    ?? q.hash     ?? q.key    ?? q.sig  ?? "";
-
-  if (!userId || !rawAmt || !txid) {
-    logger.warn({ q }, "Postback: missing required params");
-    res.status(400).send("ERROR: Missing required params");
-    return;
-  }
-
-  const amount = parseFloat(rawAmt);
-  if (isNaN(amount) || amount <= 0) {
-    logger.warn({ rawAmt }, "Postback: invalid amount");
-    res.status(400).send("ERROR: Invalid amount");
     return;
   }
 
@@ -67,6 +48,40 @@ router.get("/postback/:platformId", async (req, res) => {
 
   if (!platform.isEnabled) {
     res.status(403).send("ERROR: Platform disabled");
+    return;
+  }
+
+  const q = req.query as Record<string, string>;
+
+  // --- Resolve param values using custom names first, then built-in aliases ---
+  // user_id
+  const userId =
+    (platform.paramUserId ? q[platform.paramUserId] : undefined) ??
+    q.user_id ?? q.uid ?? q.user ?? "";
+
+  // amount
+  const rawAmt =
+    (platform.paramAmount ? q[platform.paramAmount] : undefined) ??
+    q.amount ?? q.reward ?? q.payout ?? q.coins ?? "";
+
+  // txid
+  const txid =
+    (platform.paramTxid ? q[platform.paramTxid] : undefined) ??
+    q.txid ?? q.transaction_id ?? q.offer_id ?? q.tid ?? q.oid ?? "";
+
+  // secret (no custom name needed — platforms use different fields but we keep aliases)
+  const secret = q.secret ?? q.hash ?? q.key ?? q.sig ?? "";
+
+  if (!userId || !rawAmt || !txid) {
+    logger.warn({ q, platformId }, "Postback: missing required params");
+    res.status(400).send("ERROR: Missing required params");
+    return;
+  }
+
+  const amount = parseFloat(rawAmt);
+  if (isNaN(amount) || amount <= 0) {
+    logger.warn({ rawAmt }, "Postback: invalid amount");
+    res.status(400).send("ERROR: Invalid amount");
     return;
   }
 
