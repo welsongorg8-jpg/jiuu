@@ -15,20 +15,14 @@ import { useToast } from "@/hooks/use-toast";
 
 const BASE_URL = window.location.origin;
 
-function PostbackUrl({ platformId, params }: { platformId: number; params?: { userId?: string; amount?: string; txid?: string } }) {
+function PostbackUrl({ platformId, secretKey }: { platformId: number; secretKey?: string }) {
   const [copied, setCopied] = useState(false);
-  const [copiedAlt, setCopiedAlt] = useState(false);
-
-  const hasCustomParams = params?.userId || params?.amount || params?.txid;
-
-  const uidParam    = params?.userId || "user_id";
-  const amountParam = params?.amount || "amount";
-  const txidParam   = params?.txid   || "txid";
+  const [copiedFile, setCopiedFile] = useState(false);
 
   // Standard URL: /api/postback/:id
-  const standardUrl = `${BASE_URL}/api/postback/${platformId}?${uidParam}={USER_ID}&${amountParam}={AMOUNT}&${txidParam}={TXN_ID}&secret={YOUR_SECRET}`;
-  // Alternate URL for platforms using fixed path (e.g. CPX Research): /file?pid=:id
-  const fileUrl = `${BASE_URL}/file?pid=${platformId}&${uidParam}={USER_ID}&${amountParam}={AMOUNT}&${txidParam}={TXN_ID}&hash={YOUR_SECRET}`;
+  const standardUrl = `${BASE_URL}/api/postback/${platformId}?user_id={USER_ID}&amount={AMOUNT}&txid={TXN_ID}&secret={YOUR_SECRET}`;
+  // CPX Research / fixed-path URL: /file (platform identified by hash matching secretKey)
+  const fileUrl = `${BASE_URL}/file?status={status}&trans_id={trans_id}&user_id={user_id}&sub_id={subid}&sub_id_2={subid_2}&amount_local={amount_local}&amount_usd={amount_usd}&offer_id={offer_ID}&hash={secure_hash}&ip_click={ip_click}`;
 
   const copy = (url: string, setFn: (v: boolean) => void) => {
     navigator.clipboard.writeText(url);
@@ -37,19 +31,19 @@ function PostbackUrl({ platformId, params }: { platformId: number; params?: { us
   };
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1">
       <div className="flex items-center gap-1.5">
-        <code className="text-xs font-mono text-primary truncate max-w-[200px]">{standardUrl.slice(0, 38)}…</code>
+        <code className="text-xs font-mono text-primary truncate max-w-[190px]">{standardUrl.slice(0, 36)}…</code>
         <button onClick={() => copy(standardUrl, setCopied)} className="shrink-0 text-muted-foreground hover:text-primary transition-colors" title="Copy standard postback URL">
           {copied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
         </button>
       </div>
-      {hasCustomParams && (
+      {secretKey && (
         <div className="flex items-center gap-1.5">
-          <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded shrink-0">/file</span>
-          <code className="text-xs font-mono text-blue-600 truncate max-w-[160px]">{fileUrl.slice(0, 34)}…</code>
-          <button onClick={() => copy(fileUrl, setCopiedAlt)} className="shrink-0 text-muted-foreground hover:text-blue-600 transition-colors" title="Copy /file postback URL (for CPX Research etc.)">
-            {copiedAlt ? <Check className="h-3.5 w-3.5 text-blue-600" /> : <Copy className="h-3.5 w-3.5" />}
+          <span className="text-[9px] font-bold text-blue-600 bg-blue-50 border border-blue-200 px-1 py-0.5 rounded shrink-0">CPX</span>
+          <code className="text-xs font-mono text-blue-600 truncate max-w-[170px]">{fileUrl.slice(0, 32)}…</code>
+          <button onClick={() => copy(fileUrl, setCopiedFile)} className="shrink-0 text-muted-foreground hover:text-blue-600 transition-colors" title="Copy CPX Research / fixed-path postback URL">
+            {copiedFile ? <Check className="h-3.5 w-3.5 text-blue-600" /> : <Copy className="h-3.5 w-3.5" />}
           </button>
         </div>
       )}
@@ -171,7 +165,7 @@ export default function AdminPlatforms() {
                         <TableCell>
                           <PostbackUrl
                             platformId={p.id}
-                            params={{ userId: p.paramUserId, amount: p.paramAmount, txid: p.paramTxid }}
+                            secretKey={p.secretKey}
                           />
                         </TableCell>
                         <TableCell>
@@ -318,7 +312,7 @@ function PlatformDialog({ platform }: { platform?: any }) {
               <Label className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Postback URL</Label>
               <PostbackUrl
                 platformId={platform.id}
-                params={{ userId: paramUserId, amount: paramAmount, txid: paramTxid }}
+                secretKey={secretKey}
               />
               <p className="text-xs text-muted-foreground">Paste this URL in the offerwall's postback settings.</p>
             </div>
