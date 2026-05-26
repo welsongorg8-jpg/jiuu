@@ -24,6 +24,10 @@ function formatPlatformAdmin(p: typeof platformsTable.$inferSelect) {
   return {
     ...formatPlatform(p),
     secretKey: p.secretKey,
+    paramUserId: p.paramUserId,
+    paramAmount: p.paramAmount,
+    paramTxid: p.paramTxid,
+    paramStatus: p.paramStatus,
   };
 }
 
