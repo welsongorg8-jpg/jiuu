@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type Request, type Response } from "express";
 import { db } from "@workspace/db";
 import {
   platformsTable,
@@ -12,69 +12,51 @@ import { logger } from "../lib/logger";
 const router = Router();
 
 /**
- * Generic offerwall postback endpoint.
- * Supports MyChips, Torox, OfferToro, CPX Research, Lootably, Adgate, BitLabs, and most others.
+ * Generic offerwall postback handler.
  *
- * Postback URL to enter in offerwall dashboard:
- *   https://YOUR_DOMAIN/api/postback/{platformId}?user_id={USER_ID}&amount={AMOUNT}&txid={TID}&secret=YOUR_SECRET_KEY
+ * Supports two URL formats:
+ *   1) /api/postback/{platformId}  — standard (platform ID in path)
+ *   2) /file?pid={platformId}      — CPX Research / platforms that use a fixed path
  *
- * Each platform can override the param names via its admin settings:
- *   paramUserId  — default: user_id      (also tries: uid, user)
- *   paramAmount  — default: amount       (also tries: reward, payout, coins, amount_usd, amount_local)
- *   paramTxid    — default: txid         (also tries: trans_id, transaction_id, offer_id, tid, oid)
+ * Param resolution (custom names first → built-in aliases):
+ *   user_id   → platform.paramUserId  || user_id, uid, user
+ *   amount    → platform.paramAmount  || amount, reward, payout, coins, amount_usd, amount_local
+ *   txid      → platform.paramTxid    || txid, trans_id, transaction_id, offer_id, tid, oid
+ *   secret    → platform.secretKey    vs  secret, hash, key, sig
  *
- * Built-in aliases are always checked as fallback so existing platforms are never broken.
- * CPX Research uses: trans_id (txid), amount_usd (amount), hash (secret)
+ * CPX Research postback URL format:
+ *   https://YOUR_DOMAIN/file?pid={PLATFORM_ID}&user_id={EXT_USER_ID}&trans_id={TRANS_ID}&amount_usd={REWARD}&hash={HASH}
  */
-router.get("/postback/:platformId", async (req, res) => {
-  const platformId = parseInt(req.params.platformId as string);
 
-  if (isNaN(platformId)) {
-    logger.warn("Postback: invalid platformId");
-    res.status(400).send("ERROR: Invalid platform");
-    return;
-  }
+// ─── Shared processing logic ─────────────────────────────────────────────────
 
-  const [platform] = await db
-    .select()
-    .from(platformsTable)
-    .where(eq(platformsTable.id, platformId))
-    .limit(1);
-
-  if (!platform) {
-    logger.warn({ platformId }, "Postback: platform not found");
-    res.status(404).send("ERROR: Platform not found");
-    return;
-  }
-
+async function handlePostback(
+  platform: typeof platformsTable.$inferSelect,
+  q: Record<string, string>,
+  res: Response,
+) {
   if (!platform.isEnabled) {
     res.status(403).send("ERROR: Platform disabled");
     return;
   }
 
-  const q = req.query as Record<string, string>;
-
-  // --- Resolve param values using custom names first, then built-in aliases ---
-  // user_id
+  // Resolve param values: custom name first → built-in aliases
   const userId =
     (platform.paramUserId ? q[platform.paramUserId] : undefined) ??
     q.user_id ?? q.uid ?? q.user ?? "";
 
-  // amount — also handles CPX Research (amount_usd, amount_local) and other platforms
   const rawAmt =
     (platform.paramAmount ? q[platform.paramAmount] : undefined) ??
     q.amount ?? q.reward ?? q.payout ?? q.coins ?? q.amount_usd ?? q.amount_local ?? "";
 
-  // txid — also handles CPX Research (trans_id) and other platforms
   const txid =
     (platform.paramTxid ? q[platform.paramTxid] : undefined) ??
     q.txid ?? q.trans_id ?? q.transaction_id ?? q.offer_id ?? q.tid ?? q.oid ?? "";
 
-  // secret (no custom name needed — platforms use different fields but we keep aliases)
   const secret = q.secret ?? q.hash ?? q.key ?? q.sig ?? "";
 
   if (!userId || !rawAmt || !txid) {
-    logger.warn({ q, platformId }, "Postback: missing required params");
+    logger.warn({ q, platformId: platform.id }, "Postback: missing required params");
     res.status(400).send("ERROR: Missing required params");
     return;
   }
@@ -88,7 +70,7 @@ router.get("/postback/:platformId", async (req, res) => {
 
   if (platform.secretKey) {
     if (!secret || secret !== platform.secretKey) {
-      logger.warn({ platformId, secret: "***" }, "Postback: invalid secret");
+      logger.warn({ platformId: platform.id, secret: "***" }, "Postback: invalid secret");
       res.status(403).send("ERROR: Invalid secret");
       return;
     }
@@ -120,8 +102,8 @@ router.get("/postback/:platformId", async (req, res) => {
     .where(
       and(
         eq(transactionsTable.userId, uid),
-        eq(transactionsTable.description, description)
-      )
+        eq(transactionsTable.description, description),
+      ),
     )
     .limit(1);
 
@@ -170,6 +152,62 @@ router.get("/postback/:platformId", async (req, res) => {
 
   logger.info({ uid, amount, platform: platform.name, txid }, "Postback: credited");
   res.send("OK");
+}
+
+// ─── Helper: load platform by ID ─────────────────────────────────────────────
+
+async function loadPlatform(platformId: number, res: Response) {
+  const [platform] = await db
+    .select()
+    .from(platformsTable)
+    .where(eq(platformsTable.id, platformId))
+    .limit(1);
+
+  if (!platform) {
+    logger.warn({ platformId }, "Postback: platform not found");
+    res.status(404).send("ERROR: Platform not found");
+    return null;
+  }
+
+  return platform;
+}
+
+// ─── Route 1: /api/postback/:platformId  (standard) ──────────────────────────
+
+router.get("/postback/:platformId", async (req: Request, res: Response) => {
+  const platformId = parseInt(req.params.platformId as string);
+
+  if (isNaN(platformId)) {
+    logger.warn("Postback: invalid platformId");
+    res.status(400).send("ERROR: Invalid platform");
+    return;
+  }
+
+  const platform = await loadPlatform(platformId, res);
+  if (!platform) return;
+
+  await handlePostback(platform, req.query as Record<string, string>, res);
+});
+
+// ─── Route 2: /file  (CPX Research and platforms using a fixed path) ──────────
+//
+// Add pid={PLATFORM_ID} as a static param in the offerwall dashboard:
+//   https://YOUR_DOMAIN/file?pid=1&user_id={EXT_USER_ID}&trans_id={TRANS_ID}&amount_usd={REWARD}&hash={HASH}
+
+router.get("/file", async (req: Request, res: Response) => {
+  const q = req.query as Record<string, string>;
+  const platformId = parseInt(q.pid || "");
+
+  if (isNaN(platformId)) {
+    logger.warn({ q }, "Postback /file: missing or invalid pid param");
+    res.status(400).send("ERROR: Missing pid param — add &pid={PLATFORM_ID} to the postback URL");
+    return;
+  }
+
+  const platform = await loadPlatform(platformId, res);
+  if (!platform) return;
+
+  await handlePostback(platform, q, res);
 });
 
 export default router;
