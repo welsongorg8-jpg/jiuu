@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Copy, Check, Trash2, Link2, Globe, Star } from "lucide-react";
+import { Loader2, Plus, Copy, Check, Trash2, Link2, Globe, Star, ChevronDown, ChevronUp } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -15,9 +15,12 @@ import { useToast } from "@/hooks/use-toast";
 
 const BASE_URL = window.location.origin;
 
-function PostbackUrl({ platformId }: { platformId: number }) {
+function PostbackUrl({ platformId, params }: { platformId: number; params?: { userId?: string; amount?: string; txid?: string } }) {
   const [copied, setCopied] = useState(false);
-  const url = `${BASE_URL}/api/postback/${platformId}?user_id={USER_ID}&amount={AMOUNT}&txid={TXN_ID}&secret={YOUR_SECRET}`;
+  const uidParam    = params?.userId || "user_id";
+  const amountParam = params?.amount || "amount";
+  const txidParam   = params?.txid   || "txid";
+  const url = `${BASE_URL}/api/postback/${platformId}?${uidParam}={USER_ID}&${amountParam}={AMOUNT}&${txidParam}={TXN_ID}&secret={YOUR_SECRET}`;
 
   const copy = () => {
     navigator.clipboard.writeText(url);
@@ -55,8 +58,6 @@ export default function AdminPlatforms() {
 
   const handleSetFeatured = (id: number, name: string, currentPlacement: string) => {
     const newPlacement = currentPlacement === "homepage" ? "dedicated" : "homepage";
-    const action = newPlacement === "homepage" ? "featured on landing page" : "removed from landing page";
-
     updatePlatform.mutate(
       { platformId: id, data: { placement: newPlacement as any } },
       {
@@ -64,7 +65,7 @@ export default function AdminPlatforms() {
           toast({ title: newPlacement === "homepage" ? `"${name}" is now featured on the landing page!` : `"${name}" removed from landing page` });
           queryClient.invalidateQueries({ queryKey: getListAllPlatformsQueryKey() });
         },
-        onError: () => toast({ variant: "destructive", title: `Failed to update placement` }),
+        onError: () => toast({ variant: "destructive", title: "Failed to update placement" }),
       }
     );
   };
@@ -77,7 +78,7 @@ export default function AdminPlatforms() {
         <div className="flex flex-col sm:flex-row justify-between gap-4 sm:items-center">
           <div>
             <h2 className="text-2xl font-black tracking-tight text-foreground">Offerwalls</h2>
-            <p className="text-muted-foreground text-sm">Manage offerwall platforms. Each gets a unique postback URL.</p>
+            <p className="text-muted-foreground text-sm">Manage offerwall platforms and their postback settings.</p>
           </div>
           <PlatformDialog />
         </div>
@@ -93,7 +94,7 @@ export default function AdminPlatforms() {
             </h4>
             <p className="text-xs text-muted-foreground mt-0.5">
               {featuredPlatform
-                ? "This platform appears in an iframe on the landing page. Visitors can use it before signing up. Click the star icon to change or remove it."
+                ? "This platform appears in an iframe on the landing page. Click the star icon to change or remove it."
                 : "Click the star icon next to any platform to feature it on the landing page inside an iframe for visitors."}
             </p>
           </div>
@@ -108,6 +109,7 @@ export default function AdminPlatforms() {
           <p className="text-xs text-muted-foreground leading-relaxed">
             Each platform has a unique <span className="text-primary font-mono font-semibold">Postback URL</span>.
             Paste it in the offerwall's dashboard. When a user completes an offer, the offerwall calls this URL and the user's balance is credited automatically.
+            You can customize the <span className="text-primary font-semibold">Postback Param Names</span> per platform (e.g. CPX Research uses <code className="font-mono">status</code> instead of <code className="font-mono">txid</code>).
           </p>
         </div>
 
@@ -130,18 +132,29 @@ export default function AdminPlatforms() {
                     <TableRow><TableCell colSpan={6} className="text-center py-10"><Loader2 className="animate-spin h-6 w-6 mx-auto text-primary" /></TableCell></TableRow>
                   ) : data?.platforms?.map((p: any) => {
                     const isFeatured = p.placement === "homepage";
+                    const hasCustomParams = p.paramUserId || p.paramAmount || p.paramTxid || p.paramStatus;
                     return (
                       <TableRow key={p.id} className={`border-border transition-colors ${isFeatured ? "bg-orange-50/60 hover:bg-orange-50" : "hover:bg-muted/30"}`}>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             {p.logoUrl && <img src={p.logoUrl} alt={p.name} className="w-6 h-6 rounded object-cover border border-border" />}
-                            <span className="font-bold text-foreground">{p.name}</span>
-                            {isFeatured && (
-                              <span className="text-[10px] bg-primary text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">Featured</span>
-                            )}
+                            <div>
+                              <span className="font-bold text-foreground">{p.name}</span>
+                              {isFeatured && (
+                                <span className="ml-1.5 text-[10px] bg-primary text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">Featured</span>
+                              )}
+                              {hasCustomParams && (
+                                <span className="ml-1 text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">Custom Params</span>
+                              )}
+                            </div>
                           </div>
                         </TableCell>
-                        <TableCell><PostbackUrl platformId={p.id} /></TableCell>
+                        <TableCell>
+                          <PostbackUrl
+                            platformId={p.id}
+                            params={{ userId: p.paramUserId, amount: p.paramAmount, txid: p.paramTxid }}
+                          />
+                        </TableCell>
                         <TableCell>
                           {p.apiEndpoint ? (
                             <span className="text-xs font-mono text-muted-foreground truncate block max-w-[130px]">
@@ -207,6 +220,7 @@ function PlatformDialog({ platform }: { platform?: any }) {
   const createPlatform = useCreatePlatform();
   const updatePlatform = useUpdatePlatform();
   const [open, setOpen] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const [name, setName] = useState(platform?.name || "");
   const [description, setDescription] = useState(platform?.description || "");
@@ -215,9 +229,20 @@ function PlatformDialog({ platform }: { platform?: any }) {
   const [secretKey, setSecretKey] = useState(platform?.secretKey || "");
   const [placement, setPlacement] = useState<any>(platform?.placement || "dedicated");
   const [isEnabled, setIsEnabled] = useState(platform?.isEnabled ?? true);
+  // Custom postback param names
+  const [paramUserId, setParamUserId] = useState(platform?.paramUserId || "");
+  const [paramAmount, setParamAmount] = useState(platform?.paramAmount || "");
+  const [paramTxid, setParamTxid] = useState(platform?.paramTxid || "");
+  const [paramStatus, setParamStatus] = useState(platform?.paramStatus || "");
 
   const handleSave = () => {
-    const payload = { name, description, logoUrl, apiEndpoint, secretKey, placement, isEnabled };
+    const payload: any = {
+      name, description, logoUrl, apiEndpoint, secretKey, placement, isEnabled,
+      paramUserId: paramUserId.trim() || undefined,
+      paramAmount: paramAmount.trim() || undefined,
+      paramTxid:   paramTxid.trim()   || undefined,
+      paramStatus: paramStatus.trim() || undefined,
+    };
     const mutation = platform
       ? updatePlatform.mutateAsync({ platformId: platform.id, data: payload })
       : createPlatform.mutateAsync({ data: payload });
@@ -232,6 +257,7 @@ function PlatformDialog({ platform }: { platform?: any }) {
   };
 
   const isPending = createPlatform.isPending || updatePlatform.isPending;
+  const hasCustomParams = paramUserId || paramAmount || paramTxid || paramStatus;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -244,14 +270,16 @@ function PlatformDialog({ platform }: { platform?: any }) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="bg-card border-border max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-card border-border max-w-md max-h-[92vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{platform ? 'Edit Offerwall' : 'Add Offerwall'}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
+
+          {/* Basic fields */}
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Platform Name *</Label>
-            <Input placeholder="e.g. OfferToro" value={name} onChange={e => setName(e.target.value)} />
+            <Input placeholder="e.g. CPX Research" value={name} onChange={e => setName(e.target.value)} />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Description</Label>
@@ -260,7 +288,7 @@ function PlatformDialog({ platform }: { platform?: any }) {
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Offer Wall URL</Label>
             <Input placeholder="https://example.com/wall?uid={USER_ID}" value={apiEndpoint} onChange={e => setApiEndpoint(e.target.value)} className="font-mono text-sm" />
-            <p className="text-xs text-muted-foreground">Use <code className="text-primary">{"{USER_ID}"}</code> as a placeholder — it will be replaced automatically.</p>
+            <p className="text-xs text-muted-foreground">Use <code className="text-primary">{"{USER_ID}"}</code> as placeholder — replaced automatically.</p>
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Secret Key</Label>
@@ -269,7 +297,10 @@ function PlatformDialog({ platform }: { platform?: any }) {
           {platform && (
             <div className="bg-orange-50 border border-primary/20 rounded-lg p-3 space-y-1.5">
               <Label className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Postback URL</Label>
-              <PostbackUrl platformId={platform.id} />
+              <PostbackUrl
+                platformId={platform.id}
+                params={{ userId: paramUserId, amount: paramAmount, txid: paramTxid }}
+              />
               <p className="text-xs text-muted-foreground">Paste this URL in the offerwall's postback settings.</p>
             </div>
           )}
@@ -290,6 +321,83 @@ function PlatformDialog({ platform }: { platform?: any }) {
             <Switch id="enabled" checked={isEnabled} onCheckedChange={setIsEnabled} />
             <Label htmlFor="enabled" className="cursor-pointer">{isEnabled ? "Platform is Active" : "Platform is Disabled"}</Label>
           </div>
+
+          {/* Advanced: Custom Postback Param Names */}
+          <div className="border border-border rounded-xl overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(v => !v)}
+              className="w-full flex items-center justify-between px-4 py-3 bg-muted/40 hover:bg-muted/70 transition-colors text-left"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-foreground">Custom Postback Param Names</span>
+                {hasCustomParams && (
+                  <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">Configured</span>
+                )}
+              </div>
+              {showAdvanced ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+            </button>
+            {showAdvanced && (
+              <div className="p-4 space-y-3 border-t border-border bg-card">
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Override the postback query parameter names for this platform. Leave blank to use the defaults.
+                  Useful for platforms like <span className="text-foreground font-semibold">CPX Research</span> that use different param names.
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs font-bold text-muted-foreground">User ID param</Label>
+                    <Input
+                      placeholder="user_id"
+                      value={paramUserId}
+                      onChange={e => setParamUserId(e.target.value)}
+                      className="font-mono text-xs h-9"
+                    />
+                    <p className="text-[10px] text-muted-foreground">Default: <code>user_id</code></p>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-bold text-muted-foreground">Amount param</Label>
+                    <Input
+                      placeholder="amount"
+                      value={paramAmount}
+                      onChange={e => setParamAmount(e.target.value)}
+                      className="font-mono text-xs h-9"
+                    />
+                    <p className="text-[10px] text-muted-foreground">Default: <code>amount</code></p>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-bold text-muted-foreground">Transaction ID param</Label>
+                    <Input
+                      placeholder="txid"
+                      value={paramTxid}
+                      onChange={e => setParamTxid(e.target.value)}
+                      className="font-mono text-xs h-9"
+                    />
+                    <p className="text-[10px] text-muted-foreground">Default: <code>txid</code></p>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-bold text-muted-foreground">Status param</Label>
+                    <Input
+                      placeholder="status"
+                      value={paramStatus}
+                      onChange={e => setParamStatus(e.target.value)}
+                      className="font-mono text-xs h-9"
+                    />
+                    <p className="text-[10px] text-muted-foreground">Optional / info only</p>
+                  </div>
+                </div>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-xs text-blue-800 font-semibold mb-1">Example — CPX Research:</p>
+                  <div className="text-[11px] text-blue-700 font-mono space-y-0.5">
+                    <div>User ID param: <strong>ExternalReference</strong></div>
+                    <div>Amount param: <strong>RewardValue</strong></div>
+                    <div>Transaction ID param: <strong>TransactionId</strong></div>
+                    <div>Status param: <strong>status</strong></div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           <Button onClick={handleSave} disabled={isPending || !name} className="w-full bg-primary text-white font-bold hover:bg-primary/90">
             {isPending ? <Loader2 className="animate-spin h-4 w-4" /> : (platform ? "Save Changes" : "Create Platform")}
           </Button>
