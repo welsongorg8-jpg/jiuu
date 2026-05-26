@@ -15,20 +15,25 @@ const router = Router();
  * Generic offerwall postback handler.
  *
  * Supports two URL formats:
- *   1) /api/postback/{platformId}  — standard (platform ID in path)
- *   2) /file?pid={platformId}      — CPX Research / platforms that use a fixed path
  *
- * Param resolution (custom names first → built-in aliases):
- *   user_id   → platform.paramUserId  || user_id, uid, user
- *   amount    → platform.paramAmount  || amount, reward, payout, coins, amount_usd, amount_local
- *   txid      → platform.paramTxid    || txid, trans_id, transaction_id, offer_id, tid, oid
- *   secret    → platform.secretKey    vs  secret, hash, key, sig
+ *   1) Standard — /api/postback/{platformId}
+ *      https://DOMAIN/api/postback/10?user_id={USER_ID}&amount={AMOUNT}&txid={TXN_ID}&secret={SECRET}
  *
- * CPX Research postback URL format:
- *   https://YOUR_DOMAIN/file?pid={PLATFORM_ID}&user_id={EXT_USER_ID}&trans_id={TRANS_ID}&amount_usd={REWARD}&hash={HASH}
+ *   2) Fixed-path — /file  (CPX Research and any platform that uses a fixed URL path)
+ *      Platform is identified automatically by matching the hash param against the stored secretKey.
+ *      No pid needed — just copy the URL and paste it in the offerwall dashboard.
+ *      https://DOMAIN/file?status={status}&trans_id={trans_id}&user_id={user_id}&amount_usd={amount_usd}&hash={secure_hash}
+ *
+ *      Optional: you may also add &pid={platformId} as a static param to force a specific platform.
+ *
+ * Param aliases (custom names from platform settings take priority):
+ *   user_id  →  uid, user
+ *   amount   →  reward, payout, coins, amount_usd, amount_local
+ *   txid     →  trans_id, transaction_id, offer_id, tid, oid
+ *   secret   →  hash, key, sig
  */
 
-// ─── Shared processing logic ─────────────────────────────────────────────────
+// ─── Shared processing logic ──────────────────────────────────────────────────
 
 async function handlePostback(
   platform: typeof platformsTable.$inferSelect,
@@ -40,7 +45,7 @@ async function handlePostback(
     return;
   }
 
-  // Resolve param values: custom name first → built-in aliases
+  // Resolve param values — custom names from platform settings first, then built-in aliases
   const userId =
     (platform.paramUserId ? q[platform.paramUserId] : undefined) ??
     q.user_id ?? q.uid ?? q.user ?? "";
@@ -156,7 +161,10 @@ async function handlePostback(
 
 // ─── Helper: load platform by ID ─────────────────────────────────────────────
 
-async function loadPlatform(platformId: number, res: Response) {
+async function loadPlatformById(
+  platformId: number,
+  res: Response,
+): Promise<typeof platformsTable.$inferSelect | null> {
   const [platform] = await db
     .select()
     .from(platformsTable)
@@ -183,7 +191,7 @@ router.get("/postback/:platformId", async (req: Request, res: Response) => {
     return;
   }
 
-  const platform = await loadPlatform(platformId, res);
+  const platform = await loadPlatformById(platformId, res);
   if (!platform) return;
 
   await handlePostback(platform, req.query as Record<string, string>, res);
@@ -191,21 +199,53 @@ router.get("/postback/:platformId", async (req: Request, res: Response) => {
 
 // ─── Route 2: /file  (CPX Research and platforms using a fixed path) ──────────
 //
-// Add pid={PLATFORM_ID} as a static param in the offerwall dashboard:
-//   https://YOUR_DOMAIN/file?pid=1&user_id={EXT_USER_ID}&trans_id={TRANS_ID}&amount_usd={REWARD}&hash={HASH}
+// Platform is identified in order:
+//   1. ?pid={platformId}  — static param you can add to the URL in the offerwall dashboard
+//   2. ?hash={secretKey}  — automatic: matches the hash param against stored secretKey
+//                           (CPX Research sends the raw security hash — no pid needed)
+//
+// CPX Research postback URL to paste in dashboard (replace hash with your Security Hash):
+//   https://DOMAIN/file?status={status}&trans_id={trans_id}&user_id={user_id}&sub_id={subid}&sub_id_2={subid_2}&amount_local={amount_local}&amount_usd={amount_usd}&offer_id={offer_ID}&hash={secure_hash}&ip_click={ip_click}
 
 router.get("/file", async (req: Request, res: Response) => {
   const q = req.query as Record<string, string>;
-  const platformId = parseInt(q.pid || "");
 
-  if (isNaN(platformId)) {
-    logger.warn({ q }, "Postback /file: missing or invalid pid param");
-    res.status(400).send("ERROR: Missing pid param — add &pid={PLATFORM_ID} to the postback URL");
-    return;
+  let platform: typeof platformsTable.$inferSelect | null = null;
+
+  // --- Method 1: explicit pid param ---
+  const pid = parseInt(q.pid || "");
+  if (!isNaN(pid)) {
+    platform = await loadPlatformById(pid, res);
+    if (!platform) return;
   }
 
-  const platform = await loadPlatform(platformId, res);
-  if (!platform) return;
+  // --- Method 2: match hash param against stored secretKey (CPX Research, no pid needed) ---
+  if (!platform) {
+    const hashVal = q.hash ?? q.secret ?? q.key ?? q.sig ?? "";
+    if (hashVal) {
+      const [found] = await db
+        .select()
+        .from(platformsTable)
+        .where(eq(platformsTable.secretKey, hashVal))
+        .limit(1);
+
+      if (found) {
+        platform = found;
+      }
+    }
+  }
+
+  if (!platform) {
+    logger.warn({ q }, "Postback /file: cannot identify platform");
+    res
+      .status(400)
+      .send(
+        "ERROR: Cannot identify platform. " +
+        "Either add &pid={PLATFORM_ID} to the URL, " +
+        "or make sure the Secret Key in admin matches the hash sent by the offerwall.",
+      );
+    return;
+  }
 
   await handlePostback(platform, q, res);
 });
