@@ -429,6 +429,11 @@ export const CreatePlatformBody = zod.object({
   secretKey: zod.string().optional(),
   placement: zod.enum(["homepage", "sidebar", "dedicated"]),
   isEnabled: zod.boolean().optional(),
+  // Custom postback param names (optional — built-in aliases used if omitted)
+  paramUserId: zod.string().optional(),
+  paramAmount: zod.string().optional(),
+  paramTxid: zod.string().optional(),
+  paramStatus: zod.string().optional(),
 });
 
 export const CreatePlatformResponse = zod.object({
@@ -474,6 +479,11 @@ export const UpdatePlatformBody = zod.object({
   secretKey: zod.string().optional(),
   placement: zod.enum(["homepage", "sidebar", "dedicated"]).optional(),
   isEnabled: zod.boolean().optional(),
+  // Custom postback param names (optional — built-in aliases used if omitted)
+  paramUserId: zod.string().optional(),
+  paramAmount: zod.string().optional(),
+  paramTxid: zod.string().optional(),
+  paramStatus: zod.string().optional(),
 });
 
 export const UpdatePlatformResponse = zod.object({
