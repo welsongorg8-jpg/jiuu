@@ -12,6 +12,11 @@ export const platformsTable = pgTable("platforms", {
   secretKey: text("secret_key"),
   placement: platformPlacementEnum("placement").notNull().default("dedicated"),
   isEnabled: boolean("is_enabled").notNull().default(true),
+  // Custom postback param names — optional, fall back to defaults if null
+  paramUserId: text("param_user_id"),
+  paramAmount: text("param_amount"),
+  paramTxid: text("param_txid"),
+  paramStatus: text("param_status"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
