@@ -19,11 +19,12 @@ const router = Router();
  *   https://YOUR_DOMAIN/api/postback/{platformId}?user_id={USER_ID}&amount={AMOUNT}&txid={TID}&secret=YOUR_SECRET_KEY
  *
  * Each platform can override the param names via its admin settings:
- *   paramUserId  — default: user_id  (also tries: uid, user)
- *   paramAmount  — default: amount   (also tries: reward, payout, coins)
- *   paramTxid    — default: txid     (also tries: transaction_id, offer_id, tid, oid)
+ *   paramUserId  — default: user_id      (also tries: uid, user)
+ *   paramAmount  — default: amount       (also tries: reward, payout, coins, amount_usd, amount_local)
+ *   paramTxid    — default: txid         (also tries: trans_id, transaction_id, offer_id, tid, oid)
  *
  * Built-in aliases are always checked as fallback so existing platforms are never broken.
+ * CPX Research uses: trans_id (txid), amount_usd (amount), hash (secret)
  */
 router.get("/postback/:platformId", async (req, res) => {
   const platformId = parseInt(req.params.platformId as string);
@@ -59,15 +60,15 @@ router.get("/postback/:platformId", async (req, res) => {
     (platform.paramUserId ? q[platform.paramUserId] : undefined) ??
     q.user_id ?? q.uid ?? q.user ?? "";
 
-  // amount
+  // amount — also handles CPX Research (amount_usd, amount_local) and other platforms
   const rawAmt =
     (platform.paramAmount ? q[platform.paramAmount] : undefined) ??
-    q.amount ?? q.reward ?? q.payout ?? q.coins ?? "";
+    q.amount ?? q.reward ?? q.payout ?? q.coins ?? q.amount_usd ?? q.amount_local ?? "";
 
-  // txid
+  // txid — also handles CPX Research (trans_id) and other platforms
   const txid =
     (platform.paramTxid ? q[platform.paramTxid] : undefined) ??
-    q.txid ?? q.transaction_id ?? q.offer_id ?? q.tid ?? q.oid ?? "";
+    q.txid ?? q.trans_id ?? q.transaction_id ?? q.offer_id ?? q.tid ?? q.oid ?? "";
 
   // secret (no custom name needed — platforms use different fields but we keep aliases)
   const secret = q.secret ?? q.hash ?? q.key ?? q.sig ?? "";
