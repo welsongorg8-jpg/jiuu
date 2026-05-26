@@ -115,3 +115,11 @@ CREATE INDEX IF NOT EXISTS idx_withdrawals_user_id ON withdrawals(user_id);
 CREATE INDEX IF NOT EXISTS idx_withdrawals_status ON withdrawals(status);
 CREATE INDEX IF NOT EXISTS idx_email_verifications_email ON email_verifications(email);
 CREATE INDEX IF NOT EXISTS idx_password_resets_token ON password_resets(token);
+
+-- ============================================================
+-- Postback param customization — safe additive migration
+-- ============================================================
+ALTER TABLE platforms ADD COLUMN IF NOT EXISTS param_user_id TEXT;
+ALTER TABLE platforms ADD COLUMN IF NOT EXISTS param_amount   TEXT;
+ALTER TABLE platforms ADD COLUMN IF NOT EXISTS param_txid     TEXT;
+ALTER TABLE platforms ADD COLUMN IF NOT EXISTS param_status   TEXT;
