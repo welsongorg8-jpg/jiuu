@@ -3,6 +3,7 @@ import cors from "cors";
 import path from "path";
 import pinoHttp from "pino-http";
 import router from "./routes";
+import postbackRouter from "./routes/postback";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
@@ -29,6 +30,9 @@ app.use(
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Mount postback router at root so /file is reachable (before /api and static)
+app.use(postbackRouter);
 
 app.use("/api", router);
 
