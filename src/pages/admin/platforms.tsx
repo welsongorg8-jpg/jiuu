@@ -17,23 +17,42 @@ const BASE_URL = window.location.origin;
 
 function PostbackUrl({ platformId, params }: { platformId: number; params?: { userId?: string; amount?: string; txid?: string } }) {
   const [copied, setCopied] = useState(false);
+  const [copiedAlt, setCopiedAlt] = useState(false);
+
+  const hasCustomParams = params?.userId || params?.amount || params?.txid;
+
   const uidParam    = params?.userId || "user_id";
   const amountParam = params?.amount || "amount";
   const txidParam   = params?.txid   || "txid";
-  const url = `${BASE_URL}/api/postback/${platformId}?${uidParam}={USER_ID}&${amountParam}={AMOUNT}&${txidParam}={TXN_ID}&secret={YOUR_SECRET}`;
 
-  const copy = () => {
+  // Standard URL: /api/postback/:id
+  const standardUrl = `${BASE_URL}/api/postback/${platformId}?${uidParam}={USER_ID}&${amountParam}={AMOUNT}&${txidParam}={TXN_ID}&secret={YOUR_SECRET}`;
+  // Alternate URL for platforms using fixed path (e.g. CPX Research): /file?pid=:id
+  const fileUrl = `${BASE_URL}/file?pid=${platformId}&${uidParam}={USER_ID}&${amountParam}={AMOUNT}&${txidParam}={TXN_ID}&hash={YOUR_SECRET}`;
+
+  const copy = (url: string, setFn: (v: boolean) => void) => {
     navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setFn(true);
+    setTimeout(() => setFn(false), 2000);
   };
 
   return (
-    <div className="flex items-center gap-1.5">
-      <code className="text-xs font-mono text-primary truncate max-w-[200px]">{url.slice(0, 38)}…</code>
-      <button onClick={copy} className="shrink-0 text-muted-foreground hover:text-primary transition-colors">
-        {copied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
-      </button>
+    <div className="space-y-1.5">
+      <div className="flex items-center gap-1.5">
+        <code className="text-xs font-mono text-primary truncate max-w-[200px]">{standardUrl.slice(0, 38)}…</code>
+        <button onClick={() => copy(standardUrl, setCopied)} className="shrink-0 text-muted-foreground hover:text-primary transition-colors" title="Copy standard postback URL">
+          {copied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
+        </button>
+      </div>
+      {hasCustomParams && (
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded shrink-0">/file</span>
+          <code className="text-xs font-mono text-blue-600 truncate max-w-[160px]">{fileUrl.slice(0, 34)}…</code>
+          <button onClick={() => copy(fileUrl, setCopiedAlt)} className="shrink-0 text-muted-foreground hover:text-blue-600 transition-colors" title="Copy /file postback URL (for CPX Research etc.)">
+            {copiedAlt ? <Check className="h-3.5 w-3.5 text-blue-600" /> : <Copy className="h-3.5 w-3.5" />}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
