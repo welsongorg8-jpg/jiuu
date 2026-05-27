@@ -16,15 +16,11 @@ const adminNavItems = [
   { href: "/admin/verifications", label: "Verif. Codes", icon: KeyRound },
 ];
 
-function CachvioLogo() {
+function CaptainCachLogo() {
   return (
     <div className="flex items-center gap-2">
-      <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center shadow-[0_2px_8px_rgba(249,115,22,0.35)]">
-        <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4">
-          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="white" strokeLinejoin="round"/>
-        </svg>
-      </div>
-      <span className="text-lg font-black tracking-tight text-foreground">Cach<span className="text-primary">vio</span></span>
+      <img src="/logo.jpg" alt="Captain Cach" className="w-8 h-8 rounded-md object-cover shadow-[0_2px_8px_rgba(220,38,38,0.35)]" />
+      <span className="text-lg font-black tracking-tight text-foreground">Captain <span className="text-primary">Cach</span></span>
     </div>
   );
 }
@@ -59,7 +55,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       {adminNavItems.map((item) => (
         <Link key={item.href} href={item.href} onClick={closeSheet}>
           <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all cursor-pointer text-sm font-medium ${
-            location === item.href ? "bg-primary text-white shadow-[0_2px_8px_rgba(249,115,22,0.25)]" : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+            location === item.href ? "bg-primary text-white shadow-[0_2px_8px_rgba(220,38,38,0.25)]" : "text-muted-foreground hover:bg-secondary hover:text-foreground"
           }`}>
             <item.icon className="h-4 w-4 shrink-0" />{item.label}
           </div>
@@ -72,7 +68,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen flex w-full bg-background text-foreground">
       <aside className="hidden lg:flex flex-col w-60 border-r border-border bg-sidebar shrink-0">
         <div className="p-5 border-b border-border">
-          <Link href="/"><CachvioLogo /></Link>
+          <Link href="/"><CaptainCachLogo /></Link>
           <div className="mt-2 flex items-center gap-1.5">
             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
             <span className="text-[11px] text-primary font-bold uppercase tracking-widest">Admin Panel</span>
@@ -98,14 +94,14 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       <main className="flex-1 flex flex-col min-w-0">
         <header className="lg:hidden flex items-center justify-between p-4 border-b border-border bg-sidebar sticky top-0 z-50">
           <div className="flex items-center gap-2">
-            <CachvioLogo />
+            <CaptainCachLogo />
             <span className="text-[10px] text-primary font-bold uppercase tracking-widest hidden sm:block">Admin</span>
           </div>
           <Sheet>
             <SheetTrigger asChild><Button variant="ghost" size="icon"><Menu className="h-5 w-5" /></Button></SheetTrigger>
             <SheetContent side="left" className="w-60 p-0 bg-sidebar border-border">
               <div className="p-5 border-b border-border">
-                <CachvioLogo />
+                <CaptainCachLogo />
                 <div className="mt-2 flex items-center gap-1.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                   <span className="text-[11px] text-primary font-bold uppercase tracking-widest">Admin Panel</span>
