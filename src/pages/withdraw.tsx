@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Copy, ExternalLink } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 const formatMoney = (value?: string | number | null) => {
@@ -23,11 +23,21 @@ const formatMoney = (value?: string | number | null) => {
   }).format(n);
 };
 
+const networkOptions = [
+  { value: "BEP20",         label: "BNB Smart Chain (BEP20)",  addressLabel: "Wallet Address",             addressPlaceholder: "0x..." },
+  { value: "TRC20",         label: "Tron (TRC20)",             addressLabel: "Wallet Address",             addressPlaceholder: "T..."  },
+  { value: "SHAM_CASH",     label: "شام كاش (Sham Cash)",      addressLabel: "Phone Number",               addressPlaceholder: "09xxxxxxxx" },
+  { value: "SYRIATEL_CASH", label: "سرياتيل كاش (Syriatel Cash)", addressLabel: "Phone Number",           addressPlaceholder: "09xxxxxxxx" },
+  { value: "COENEX_EMAIL",  label: "Coenex (Email)",           addressLabel: "Email Address",              addressPlaceholder: "you@example.com" },
+];
+
 const withdrawSchema = z.object({
   amount: z.string().min(1, "Amount is required"),
-  network: z.enum(["BEP20", "TRC20"]),
-  walletAddress: z.string().min(10, "Invalid wallet address"),
+  network: z.enum(["BEP20", "TRC20", "SHAM_CASH", "SYRIATEL_CASH", "COENEX_EMAIL"]),
+  walletAddress: z.string().min(3, "Required"),
 });
+
+type WithdrawForm = z.infer<typeof withdrawSchema>;
 
 export default function Withdraw() {
   const { toast } = useToast();
@@ -36,7 +46,7 @@ export default function Withdraw() {
   const { data: historyData, isLoading: historyLoading } = useListWithdrawals({ page: 1, limit: 10 });
   const withdrawMutation = useCreateWithdrawal();
 
-  const form = useForm<z.infer<typeof withdrawSchema>>({
+  const form = useForm<WithdrawForm>({
     resolver: zodResolver(withdrawSchema),
     defaultValues: {
       amount: "",
@@ -45,8 +55,11 @@ export default function Withdraw() {
     },
   });
 
-  const onSubmit = (data: z.infer<typeof withdrawSchema>) => {
-    withdrawMutation.mutate({ data }, {
+  const selectedNetwork = form.watch("network");
+  const networkMeta = networkOptions.find(n => n.value === selectedNetwork) ?? networkOptions[0];
+
+  const onSubmit = (data: WithdrawForm) => {
+    withdrawMutation.mutate({ data: { ...data, network: data.network as any } }, {
       onSuccess: () => {
         toast({ title: "Withdrawal Requested", description: "Your request is being processed." });
         form.reset();
@@ -59,12 +72,15 @@ export default function Withdraw() {
     });
   };
 
+  const networkDisplayName = (network: string) =>
+    networkOptions.find(n => n.value === network)?.label ?? network;
+
   return (
     <Layout>
       <div className="space-y-8 max-w-6xl mx-auto">
         <div>
           <h2 className="text-3xl font-black tracking-tight uppercase">Withdraw Funds</h2>
-          <p className="text-muted-foreground">Transfer USDT to your crypto wallet.</p>
+          <p className="text-muted-foreground">Transfer your balance to your preferred payment method.</p>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
@@ -72,12 +88,12 @@ export default function Withdraw() {
             <Card className="bg-card border-border">
               <CardHeader>
                 <CardTitle className="uppercase tracking-wider">Request Withdrawal</CardTitle>
-                <CardDescription>Minimum withdrawal: 5 USDT</CardDescription>
+                <CardDescription>Minimum withdrawal: $1</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="mb-6 p-4 bg-accent rounded-lg border border-border flex justify-between items-center">
                   <span className="text-muted-foreground uppercase text-xs font-bold">Available</span>
-                  <span className="font-bold text-white">{formatMoney(balanceData?.balance)} USDT</span>
+                  <span className="font-bold">{formatMoney(balanceData?.balance)} USDT</span>
                 </div>
 
                 <Form {...form}>
@@ -89,7 +105,7 @@ export default function Withdraw() {
                         <FormItem>
                           <FormLabel className="text-muted-foreground uppercase text-xs font-bold">Amount (USDT)</FormLabel>
                           <FormControl>
-                            <Input type="number" step="0.01" placeholder="10.00" {...field} className="bg-background border-input focus-visible:ring-primary" />
+                            <Input type="number" step="0.01" placeholder="1.00" {...field} className="bg-background border-input focus-visible:ring-primary" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -100,16 +116,23 @@ export default function Withdraw() {
                       name="network"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-muted-foreground uppercase text-xs font-bold">Network</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormLabel className="text-muted-foreground uppercase text-xs font-bold">Payment Method</FormLabel>
+                          <Select
+                            onValueChange={(val) => {
+                              field.onChange(val);
+                              form.setValue("walletAddress", "");
+                            }}
+                            defaultValue={field.value}
+                          >
                             <FormControl>
                               <SelectTrigger className="bg-background border-input focus-visible:ring-primary">
-                                <SelectValue placeholder="Select network" />
+                                <SelectValue placeholder="Select method" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="BEP20">BNB Smart Chain (BEP20)</SelectItem>
-                              <SelectItem value="TRC20">Tron (TRC20)</SelectItem>
+                              {networkOptions.map(opt => (
+                                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -121,17 +144,23 @@ export default function Withdraw() {
                       name="walletAddress"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-muted-foreground uppercase text-xs font-bold">Wallet Address</FormLabel>
+                          <FormLabel className="text-muted-foreground uppercase text-xs font-bold">
+                            {networkMeta.addressLabel}
+                          </FormLabel>
                           <FormControl>
-                            <Input placeholder="0x..." {...field} className="bg-background border-input focus-visible:ring-primary font-mono text-sm" />
+                            <Input
+                              placeholder={networkMeta.addressPlaceholder}
+                              {...field}
+                              className="bg-background border-input focus-visible:ring-primary font-mono text-sm"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-primary text-black font-bold uppercase tracking-wider hover:bg-primary/90 shadow-[0_0_15px_rgba(0,255,135,0.2)] mt-4"
+                    <Button
+                      type="submit"
+                      className="w-full bg-primary text-white font-bold uppercase tracking-wider hover:bg-primary/90 mt-4"
                       disabled={withdrawMutation.isPending}
                     >
                       {withdrawMutation.isPending ? <Loader2 className="animate-spin h-5 w-5" /> : "Withdraw Now"}
@@ -154,7 +183,7 @@ export default function Withdraw() {
                       <TableRow className="border-border">
                         <TableHead className="font-bold text-muted-foreground">Date</TableHead>
                         <TableHead className="font-bold text-muted-foreground">Amount</TableHead>
-                        <TableHead className="font-bold text-muted-foreground">Network</TableHead>
+                        <TableHead className="font-bold text-muted-foreground">Method</TableHead>
                         <TableHead className="font-bold text-muted-foreground">Status</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -167,10 +196,17 @@ export default function Withdraw() {
                             <TableCell className="text-muted-foreground whitespace-nowrap">
                               {new Date(w.createdAt).toLocaleDateString()}
                             </TableCell>
-                            <TableCell className="font-bold text-white">{w.amount} USDT</TableCell>
-                            <TableCell><Badge variant="outline" className="font-mono">{w.network}</Badge></TableCell>
+                            <TableCell className="font-bold">{w.amount} USDT</TableCell>
                             <TableCell>
-                              <Badge variant={w.status === 'paid' ? 'default' : w.status === 'rejected' ? 'destructive' : 'secondary'} className="uppercase tracking-wider text-[10px]">
+                              <Badge variant="outline" className="font-semibold text-xs">
+                                {networkDisplayName(w.network)}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant={w.status === "paid" ? "default" : w.status === "rejected" ? "destructive" : "secondary"}
+                                className="uppercase tracking-wider text-[10px]"
+                              >
                                 {w.status}
                               </Badge>
                             </TableCell>

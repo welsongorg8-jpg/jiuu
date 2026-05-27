@@ -1,7 +1,13 @@
 import { pgTable, serial, integer, numeric, text, timestamp, pgEnum } from "drizzle-orm/pg-core";
 import { usersTable } from "./users";
 
-export const withdrawalNetworkEnum = pgEnum("withdrawal_network", ["BEP20", "TRC20"]);
+export const withdrawalNetworkEnum = pgEnum("withdrawal_network", [
+  "BEP20",
+  "TRC20",
+  "SHAM_CASH",
+  "SYRIATEL_CASH",
+  "COENEX_EMAIL",
+]);
 export const withdrawalStatusEnum = pgEnum("withdrawal_status", ["pending", "approved", "rejected", "paid"]);
 
 export const withdrawalsTable = pgTable("withdrawals", {

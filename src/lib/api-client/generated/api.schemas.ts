@@ -79,7 +79,7 @@ export interface BalanceResponse {
 export type TransactionType = "earning" | "withdrawal" | "adjustment" | "refund";
 export type TransactionStatus = "completed" | "pending" | "failed";
 export type WithdrawalStatus = "pending" | "approved" | "rejected" | "paid";
-export type WithdrawalNetwork = "BEP20" | "TRC20";
+export type WithdrawalNetwork = "BEP20" | "TRC20" | "SHAM_CASH" | "SYRIATEL_CASH" | "COENEX_EMAIL";
 export type PlatformPlacement = "homepage" | "sidebar" | "dedicated";
 export type AdminRole = "admin" | "super_admin";
 export type UserStatus = "active" | "disabled" | "unverified";

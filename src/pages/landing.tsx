@@ -1,7 +1,6 @@
 import { Link } from "wouter";
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, Zap, Coins, Shield, Clock, TrendingUp, Star, Gamepad2, CheckCircle2, Globe, Award, Maximize2, X } from "lucide-react";
+import { ChevronRight, Zap, Coins, Shield, Clock, TrendingUp, Star, Gamepad2, CheckCircle2, Globe, Award } from "lucide-react";
 
 const stats = [
   { value: "$2.4M+", label: "Total Paid Out" },
@@ -44,75 +43,6 @@ function CaptainCachLogo({ className = "" }: { className?: string }) {
   );
 }
 
-function FeaturedPlatformSection() {
-  const [featured, setFeatured] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [expanded, setExpanded] = useState(false);
-
-  useEffect(() => {
-    fetch("/api/platforms/featured")
-      .then(r => r.json())
-      .then(d => { setFeatured(d.platform); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, []);
-
-  if (loading || !featured || !featured.apiEndpoint) return null;
-
-  return (
-    <section className="py-16 px-4 bg-white border-y border-border">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-1.5 text-sm text-primary font-bold mb-3">
-            <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-            Live Now — Start Earning Instantly
-          </div>
-          <h2 className="text-3xl md:text-4xl font-black tracking-tight text-foreground mb-2">
-            {featured.name}
-          </h2>
-          {featured.description && (
-            <p className="text-muted-foreground max-w-xl mx-auto">{featured.description}</p>
-          )}
-        </div>
-
-        <div className={`relative rounded-2xl border-2 border-primary/20 overflow-hidden shadow-[0_8px_40px_rgba(220,38,38,0.12)] transition-all duration-300 ${expanded ? "h-[85vh]" : "h-[520px]"}`}>
-          <div className="flex items-center justify-between px-4 py-2.5 bg-primary text-white">
-            <div className="flex items-center gap-2">
-              {featured.logoUrl && (
-                <img src={featured.logoUrl} alt={featured.name} className="w-6 h-6 rounded object-cover" />
-              )}
-              <span className="font-bold text-sm">{featured.name}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs opacity-80 hidden sm:block">Sign up and start earning — it's free</span>
-              <button onClick={() => setExpanded(e => !e)} className="p-1.5 rounded-md hover:bg-white/20 transition-colors" title={expanded ? "Collapse" : "Expand"}>
-                {expanded ? <X className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-              </button>
-            </div>
-          </div>
-          <iframe src={featured.apiEndpoint} className="w-full border-0" style={{ height: "calc(100% - 44px)" }} allow="fullscreen" title={featured.name} />
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-5 bg-red-50 border border-primary/20 rounded-xl p-4">
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-              <Zap className="h-4 w-4 text-primary" />
-            </div>
-            <div>
-              <p className="font-bold text-foreground text-sm">Instant Credit</p>
-              <p className="text-muted-foreground text-xs">Complete an offer above and your Captain Cach balance updates automatically.</p>
-            </div>
-          </div>
-          <Link href="/register">
-            <Button className="bg-primary text-white font-bold shrink-0 shadow-[0_2px_12px_rgba(220,38,38,0.3)]">
-              Create Free Account <ChevronRight className="ml-1 h-4 w-4" />
-            </Button>
-          </Link>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 export default function Landing() {
   return (
     <div className="min-h-screen bg-white text-foreground overflow-x-hidden">
@@ -138,7 +68,7 @@ export default function Landing() {
         </div>
       </nav>
 
-      {/* Hero — red gradient banner */}
+      {/* Hero */}
       <section className="relative pt-28 pb-20 md:pt-40 md:pb-28 bg-gradient-to-br from-red-700 via-red-600 to-red-500 text-white overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-72 h-72 bg-black/20 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl pointer-events-none" />
@@ -197,9 +127,6 @@ export default function Landing() {
           ))}
         </div>
       </section>
-
-      {/* Featured Platform */}
-      <FeaturedPlatformSection />
 
       {/* How it Works */}
       <section id="how-it-works" className="py-24 px-4 bg-white">
@@ -327,7 +254,7 @@ export default function Landing() {
               </Button>
             </Link>
           </div>
-          <p className="text-sm text-red-100">Minimum withdrawal: $5 USDT · BEP20 & TRC20 supported</p>
+          <p className="text-sm text-red-100">Minimum withdrawal: $1 USDT · BEP20, TRC20, Sham Cash, Syriatel Cash & Coenex supported</p>
         </div>
       </section>
 

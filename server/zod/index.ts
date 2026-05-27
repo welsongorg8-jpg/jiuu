@@ -305,7 +305,7 @@ export const ListWithdrawalsResponse = zod.object({
       id: zod.number(),
       userId: zod.number(),
       amount: zod.string(),
-      network: zod.enum(["BEP20", "TRC20"]),
+      network: zod.enum(["BEP20", "TRC20", "SHAM_CASH", "SYRIATEL_CASH", "COENEX_EMAIL"]),
       walletAddress: zod.string(),
       status: zod.enum(["pending", "approved", "rejected", "paid"]),
       adminNote: zod.string().nullish(),
@@ -324,7 +324,7 @@ export const ListWithdrawalsResponse = zod.object({
  */
 export const CreateWithdrawalBody = zod.object({
   amount: zod.string(),
-  network: zod.enum(["BEP20", "TRC20"]),
+  network: zod.enum(["BEP20", "TRC20", "SHAM_CASH", "SYRIATEL_CASH", "COENEX_EMAIL"]),
   walletAddress: zod.string(),
 });
 
@@ -332,7 +332,7 @@ export const CreateWithdrawalResponse = zod.object({
   id: zod.number(),
   userId: zod.number(),
   amount: zod.string(),
-  network: zod.enum(["BEP20", "TRC20"]),
+  network: zod.enum(["BEP20", "TRC20", "SHAM_CASH", "SYRIATEL_CASH", "COENEX_EMAIL"]),
   walletAddress: zod.string(),
   status: zod.enum(["pending", "approved", "rejected", "paid"]),
   adminNote: zod.string().nullish(),
@@ -360,7 +360,7 @@ export const ListAllWithdrawalsResponse = zod.object({
       id: zod.number(),
       userId: zod.number(),
       amount: zod.string(),
-      network: zod.enum(["BEP20", "TRC20"]),
+      network: zod.enum(["BEP20", "TRC20", "SHAM_CASH", "SYRIATEL_CASH", "COENEX_EMAIL"]),
       walletAddress: zod.string(),
       status: zod.enum(["pending", "approved", "rejected", "paid"]),
       adminNote: zod.string().nullish(),
@@ -391,7 +391,7 @@ export const UpdateWithdrawalStatusResponse = zod.object({
   id: zod.number(),
   userId: zod.number(),
   amount: zod.string(),
-  network: zod.enum(["BEP20", "TRC20"]),
+  network: zod.enum(["BEP20", "TRC20", "SHAM_CASH", "SYRIATEL_CASH", "COENEX_EMAIL"]),
   walletAddress: zod.string(),
   status: zod.enum(["pending", "approved", "rejected", "paid"]),
   adminNote: zod.string().nullish(),

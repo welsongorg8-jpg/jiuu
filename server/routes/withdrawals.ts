@@ -12,7 +12,7 @@ import {
 
 const router = Router();
 
-const MIN_WITHDRAWAL = 5;
+const MIN_WITHDRAWAL = 1;
 
 function formatWithdrawal(w: typeof withdrawalsTable.$inferSelect) {
   return {
