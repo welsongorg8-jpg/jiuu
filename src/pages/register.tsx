@@ -22,7 +22,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 function CaptainCachLogo() {
   return (
     <div className="flex items-center justify-center gap-2">
-      <img src="/logo.jpg" alt="Captain Cach" className="w-10 h-10 rounded-xl object-cover shadow-[0_4px_14px_rgba(220,38,38,0.4)]" />
+      <img src="/logo.jpg" alt="Captain Cash" className="w-10 h-10 rounded-xl object-cover shadow-[0_4px_14px_rgba(220,38,38,0.4)]" />
       <span className="text-2xl font-black tracking-tight text-foreground">Captain <span className="text-primary">Cach</span></span>
     </div>
   );
