@@ -37,7 +37,7 @@ export default function Register() {
 
   const registerMutation = useMutation({
     mutationFn: (data: RegisterFormValues) => customFetch<AuthResponse>("/api/auth/register", { method: "POST", body: JSON.stringify(data) }),
-    onSuccess: (res) => { setToken(res.token); toast({ title: "Welcome to Captain Cach!" }); setLocation("/dashboard"); },
+    onSuccess: (res) => { setToken(res.token); toast({ title: "Welcome to Captain Cash!" }); setLocation("/dashboard"); },
     onError: (error: any) => { toast({ variant: "destructive", title: "Registration failed", description: error.data?.error || error.message }); },
   });
 
