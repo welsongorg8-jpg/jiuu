@@ -26,8 +26,8 @@ const formatMoney = (value?: string | number | null) => {
 const networkOptions = [
   { value: "BEP20",         label: "BNB Smart Chain (BEP20)",  addressLabel: "Wallet Address",             addressPlaceholder: "0x..." },
   { value: "TRC20",         label: "Tron (TRC20)",             addressLabel: "Wallet Address",             addressPlaceholder: "T..."  },
-  { value: "SHAM_CASH",     label: "شام كاش (Sham Cash)",      addressLabel: "Phone Number",               addressPlaceholder: "09xxxxxxxx" },
-  { value: "SYRIATEL_CASH", label: "سرياتيل كاش (Syriatel Cash)", addressLabel: "Phone Number",           addressPlaceholder: "09xxxxxxxx" },
+  { value: "SHAM_CASH",     label: "(Sham Cash)",      addressLabel: "Phone Number",               addressPlaceholder: "09xxxxxxxx" },
+  { value: "SYRIATEL_CASH", label: "(Syriatel Cash)", addressLabel: "Phone Number",           addressPlaceholder: "09xxxxxxxx" },
   { value: "COENEX_EMAIL",  label: "Coenex (Email)",           addressLabel: "Email Address",              addressPlaceholder: "you@example.com" },
 ];
 
