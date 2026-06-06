@@ -32,12 +32,12 @@ const steps = [
 
 const partners = ["OfferToro", "CPX Research", "Lootably", "Adgate Media", "BitLabs"];
 
-function CaptainCashLogo({ className = "" }: { className?: string }) {
+function CaptainCachLogo({ className = "" }: { className?: string }) {
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <img src="/logo.jpg" alt="Captain Cash" className="w-8 h-8 rounded-lg object-cover shadow-[0_2px_8px_rgba(220,38,38,0.35)]" />
+      <img src="/logo.jpg" alt="Captain Cach" className="w-8 h-8 rounded-lg object-cover shadow-[0_2px_8px_rgba(220,38,38,0.35)]" />
       <span className="text-xl font-black tracking-tight text-foreground">
-        Captain <span className="text-primary">Cash</span>
+        Captain <span className="text-primary">Cach</span>
       </span>
     </div>
   );
@@ -49,7 +49,7 @@ export default function Landing() {
       {/* Navbar */}
       <nav className="fixed top-0 w-full z-50 border-b border-border bg-white/95 backdrop-blur-xl shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex justify-between items-center">
-          <CaptainCashLogo />
+          <CaptainCachLogo />
           <div className="hidden md:flex gap-7 text-sm text-muted-foreground items-center">
             <a href="#how-it-works" className="hover:text-primary transition-colors font-medium">How It Works</a>
             <a href="#features" className="hover:text-primary transition-colors font-medium">Features</a>
