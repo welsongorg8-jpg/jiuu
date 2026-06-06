@@ -99,7 +99,7 @@ export default function AdminDashboard() {
                 {isLoading ? (
                   <Skeleton className="h-8 w-24 mt-1" />
                 ) : (
-                  <div className="text-2xl font-black text-white">{stat.value ?? "—"}</div>
+                  <div className="text-2xl font-black text-black">{stat.value ?? "—"}</div>
                 )}
                 <p className="text-[10px] text-muted-foreground mt-1">{stat.sub}</p>
               </CardContent>
