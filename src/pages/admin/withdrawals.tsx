@@ -58,7 +58,7 @@ export default function AdminWithdrawals() {
                   ) : data?.withdrawals?.map(w => (
                     <TableRow key={w.id} className="border-border">
                       <TableCell className="font-mono text-xs">{w.userId}</TableCell>
-                      <TableCell className="font-bold text-white">{w.amount} USDT</TableCell>
+                      <TableCell className="font-bold text-black">{w.amount} USDT</TableCell>
                       <TableCell>
                         <div className="text-xs text-muted-foreground">{w.network}</div>
                         <div className="font-mono text-xs truncate max-w-[150px]" title={w.walletAddress}>{w.walletAddress}</div>
