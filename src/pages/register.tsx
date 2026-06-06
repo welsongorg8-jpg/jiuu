@@ -19,11 +19,11 @@ const registerSchema = z.object({
 });
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
-function CaptainCashLogo() {
+function CaptainCachLogo() {
   return (
     <div className="flex items-center justify-center gap-2">
       <img src="/logo.jpg" alt="Captain Cash" className="w-10 h-10 rounded-xl object-cover shadow-[0_4px_14px_rgba(220,38,38,0.4)]" />
-      <span className="text-2xl font-black tracking-tight text-foreground">Captain <span className="text-primary">Cash</span></span>
+      <span className="text-2xl font-black tracking-tight text-foreground">Captain <span className="text-primary">Cach</span></span>
     </div>
   );
 }
@@ -64,7 +64,7 @@ export default function Register() {
       <div className="flex-1 lg:max-w-md flex flex-col items-center justify-center px-8 py-12">
         <div className="w-full max-w-sm">
           <div className="mb-8 text-center lg:text-left">
-            <div className="lg:hidden mb-6"><CaptainCashLogo /></div>
+            <div className="lg:hidden mb-6"><CaptainCachLogo /></div>
             <h1 className="text-2xl font-black text-foreground">Create Account</h1>
             <p className="text-muted-foreground mt-1 text-sm">Join thousands of users earning USDT daily.</p>
           </div>
