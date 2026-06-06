@@ -261,7 +261,7 @@ export default function Landing() {
       <footer className="border-t border-border bg-white py-10 px-4">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <CaptainCashLogo />
-          <p className="text-muted-foreground text-sm">© {new Date().getFullYear()} Captain Cash. All rights reserved.</p>
+          <p className="text-muted-foreground text-sm">© {new Date().getFullYear()} Captain Cach. All rights reserved.</p>
           <div className="flex gap-6 text-sm text-muted-foreground">
             <Link href="/register"><span className="hover:text-primary cursor-pointer transition-colors">Sign Up</span></Link>
             <Link href="/login"><span className="hover:text-primary cursor-pointer transition-colors">Login</span></Link>
