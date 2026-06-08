@@ -67,7 +67,7 @@ async function handlePostback(
   }
 
   const amount = parseFloat(rawAmt);
-  if (isNaN(amount)  amount <= 0) {
+  if (isNaN(amount) || amount <= 0) {
     logger.warn({ rawAmt }, "Postback: invalid amount");
     res.status(400).send("ERROR: Invalid amount");
     return;
