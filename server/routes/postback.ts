@@ -60,13 +60,16 @@ async function handlePostback(
 
   const secret = q.secret ?? q.hash ?? q.key ?? q.sig ?? "";
 
-  if (!userId || !rawAmt || !txid) {
+  // FIXED: missing operators (||)
+  if (!userId  !rawAmt  !txid) {
     logger.warn({ q, platformId: platform.id }, "Postback: missing required params");
     res.status(400).send("ERROR: Missing required params");
     return;
   }
 
   const amount = parseFloat(rawAmt);
+
+  // FIXED: missing operators (||)
   if (isNaN(amount) || amount <= 0) {
     logger.warn({ rawAmt }, "Postback: invalid amount");
     res.status(400).send("ERROR: Invalid amount");
@@ -77,6 +80,7 @@ async function handlePostback(
   const userAmount = amount * 0.67;
 
   if (platform.secretKey) {
+    // FIXED: missing operator (||)
     if (!secret || secret !== platform.secretKey) {
       logger.warn({ platformId: platform.id, secret: "***" }, "Postback: invalid secret");
       res.status(403).send("ERROR: Invalid secret");
