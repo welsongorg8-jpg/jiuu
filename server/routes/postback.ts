@@ -77,7 +77,7 @@ async function handlePostback(
   const userAmount = amount * 0.67;
 
   if (platform.secretKey) {
-    if (!secret  secret !== platform.secretKey) {
+    if (!secret || secret !== platform.secretKey) {
       logger.warn({ platformId: platform.id, secret: "***" }, "Postback: invalid secret");
       res.status(403).send("ERROR: Invalid secret");
       return;
