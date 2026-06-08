@@ -60,8 +60,6 @@ async function handlePostback(
 
   const secret = q.secret ?? q.hash ?? q.key ?? q.sig ?? "";
 
-console.log("POSTBACK RECEIVED:", q);
- // FIXED: missing operators (||)
   if (!userId || !rawAmt || !txid) {
     logger.warn({ q, platformId: platform.id }, "Postback: missing required params");
     res.status(400).send("ERROR: Missing required params");
@@ -69,19 +67,13 @@ console.log("POSTBACK RECEIVED:", q);
   }
 
   const amount = parseFloat(rawAmt);
-
-  // FIXED: missing operators (||)
   if (isNaN(amount) || amount <= 0) {
     logger.warn({ rawAmt }, "Postback: invalid amount");
     res.status(400).send("ERROR: Invalid amount");
     return;
   }
 
-  // User receives 67% of the incoming amount
-  const userAmount = amount * 0.67;
-
   if (platform.secretKey) {
-    // FIXED: missing operator (||)
     if (!secret || secret !== platform.secretKey) {
       logger.warn({ platformId: platform.id, secret: "***" }, "Postback: invalid secret");
       res.status(403).send("ERROR: Invalid secret");
@@ -107,7 +99,8 @@ console.log("POSTBACK RECEIVED:", q);
     return;
   }
 
- const description = `[${platform.name}] Offer #${txid}`;
+  const description = `[${platform.name}] Offer #${txid}`;
+
   const [duplicate] = await db
     .select({ id: transactionsTable.id })
     .from(transactionsTable)
@@ -140,13 +133,13 @@ console.log("POSTBACK RECEIVED:", q);
     }
 
     const before = parseFloat(balance.balance);
-    const after  = before + userAmount;
+    const after  = before + amount;
 
     await tx
       .update(balancesTable)
       .set({
         balance:      after.toFixed(8),
-        totalEarned:  (parseFloat(balance.totalEarned) + userAmount).toFixed(8),
+        totalEarned:  (parseFloat(balance.totalEarned) + amount).toFixed(8),
         updatedAt:    new Date(),
       })
       .where(eq(balancesTable.userId, uid));
@@ -154,7 +147,7 @@ console.log("POSTBACK RECEIVED:", q);
     await tx.insert(transactionsTable).values({
       userId:        uid,
       type:          "earning",
-      amount:        userAmount.toFixed(8),
+      amount:        amount.toFixed(8),
       balanceBefore: before.toFixed(8),
       balanceAfter:  after.toFixed(8),
       description,
@@ -162,7 +155,7 @@ console.log("POSTBACK RECEIVED:", q);
     });
   });
 
-  logger.info({ uid, amount: userAmount, platform: platform.name, txid }, "Postback: credited");
+  logger.info({ uid, amount, platform: platform.name, txid }, "Postback: credited");
   res.send("OK");
 }
 
