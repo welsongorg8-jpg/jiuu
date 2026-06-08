@@ -106,8 +106,7 @@ async function handlePostback(
     return;
   }
 
-  const description = [${platform.name}] Offer #${txid};
-
+ const description = `[${platform.name}] Offer #${txid}`;
   const [duplicate] = await db
     .select({ id: transactionsTable.id })
     .from(transactionsTable)
