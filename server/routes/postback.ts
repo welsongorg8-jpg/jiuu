@@ -61,7 +61,7 @@ async function handlePostback(
   const secret = q.secret ?? q.hash ?? q.key ?? q.sig ?? "";
 
   // FIXED: missing operators (||)
-  if (!userId || !rawAmt  !txid) {
+  if (!userId || !rawAmt || !txid) {
     logger.warn({ q, platformId: platform.id }, "Postback: missing required params");
     res.status(400).send("ERROR: Missing required params");
     return;
