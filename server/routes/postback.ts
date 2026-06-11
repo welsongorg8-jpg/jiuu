@@ -68,7 +68,8 @@ async function handlePostback(
   }
 
   const amount = parseFloat(rawAmt);
-console.log("QUERY:", req.query);
+console.log("🔥 POSTBACK HIT");
+  console.log("QUERY:", req.query);
   // FIXED: missing operators (||)
   if (isNaN(amount) || amount <= 0) {
     logger.warn({ rawAmt }, "Postback: invalid amount");
