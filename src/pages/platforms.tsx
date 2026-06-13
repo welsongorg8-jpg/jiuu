@@ -57,7 +57,7 @@ export default function Platforms() {
                 <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10 flex items-center justify-center mx-auto mb-4 border border-blue-500/15">
                   <Gamepad2 className="h-8 w-8 text-blue-400" />
                 </div>
-                <p className="font-semibold text-white mb-2">No platforms yet</p>
+                <p className="font-semibold text-black mb-2">No platforms yet</p>
                 <p className="text-slate-500 text-sm">Check back soon!</p>
               </div>
             ) : (
