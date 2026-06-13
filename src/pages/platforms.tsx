@@ -148,7 +148,7 @@ export default function Platforms() {
                       <Zap className="h-4 w-4 text-cyan-400" />
                     </div>
                   )}
-                  <span className="font-semibold text-white flex-1">{selectedPlatform.name}</span>
+                  <span className="font-semibold text-black flex-1">{selectedPlatform.name}</span>
                   <a
                     href={getOfferUrl(selectedPlatform)}
                     target="_blank"
