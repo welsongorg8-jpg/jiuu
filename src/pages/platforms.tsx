@@ -40,7 +40,7 @@ export default function Platforms() {
             <MonitorPlay className="w-6 h-6 text-cyan-400" />
           </div>
           <div>
-            <h1 className="text-3xl font-extrabold text-white mb-1">Offerwalls</h1>
+            <h1 className="text-3xl font-extrabold text-black mb-1">Offerwalls</h1>
             <p className="text-slate-500">Select a platform to start earning USDT</p>
           </div>
         </div>
@@ -172,7 +172,7 @@ export default function Platforms() {
                 <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10 flex items-center justify-center mb-6 border border-blue-500/15">
                   <Gamepad2 className="h-10 w-10 text-blue-400" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-3">No Platform Selected</h3>
+                <h3 className="text-xl font-bold text-black mb-3">No Platform Selected</h3>
                 <p className="text-slate-500 text-sm max-w-sm">
                   Select a platform from the list to start earning USDT rewards.
                 </p>
