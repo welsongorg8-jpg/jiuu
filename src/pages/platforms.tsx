@@ -1,7 +1,7 @@
 import { Layout } from "@/components/layout";
 import { useListPlatforms, useGetMe } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Zap, ExternalLink, ChevronRight, Gamepad2, MonitorPlay } from "lucide-react";
+import { Zap, ExternalLink } from "lucide-react";
 import { useState, useEffect } from "react";
 
 function buildOfferUrl(template: string, userId: number): string {
@@ -18,10 +18,13 @@ export default function Platforms() {
 
   const platforms = platformsData?.platforms ?? [];
 
+  // Auto-open the admin-featured platform (homepage placement) on load
   useEffect(() => {
     if (!platforms.length || selectedPlatform) return;
+    // First priority: homepage placement
     const featured = platforms.find((p: any) => p.placement === "homepage" && p.apiEndpoint && p.isEnabled);
     if (featured) { setSelectedPlatform(featured); return; }
+    // Fallback: first platform with a URL
     const fallback = platforms.find((p: any) => p.apiEndpoint && p.isEnabled);
     if (fallback) setSelectedPlatform(fallback);
   }, [platforms]);
@@ -33,35 +36,31 @@ export default function Platforms() {
 
   return (
     <Layout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/20 to-teal-500/10 flex items-center justify-center border border-cyan-500/15">
-            <MonitorPlay className="w-6 h-6 text-cyan-400" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-extrabold text-black mb-1">Offerwalls</h1>
-            <p className="text-slate-500">Select a platform to start earning USDT</p>
-          </div>
+      <div className="space-y-3">
+        <div>
+          <h2 className="text-2xl font-black tracking-tight text-foreground">Offerwalls</h2>
+          <p className="text-muted-foreground text-sm mt-1">Select a platform to start earning USDT.</p>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-4" style={{ height: "calc(100vh - 140px)", minHeight: "560px" }}>
-          {/* Platform List - Horizontal on mobile, vertical on desktop */}
-          <div className="w-full lg:w-72 shrink-0 flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto overflow-y-hidden lg:pr-1 pb-2 lg:pb-0 scroll-smooth scrollbar-hide">
-            {loadingPlatforms ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-20 w-full rounded-xl bg-slate-800" />
-              ))
-            ) : platforms.length === 0 ? (
-              <div className="text-center py-16 modern-card rounded-2xl">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10 flex items-center justify-center mx-auto mb-4 border border-blue-500/15">
-                  <Gamepad2 className="h-8 w-8 text-blue-400" />
-                </div>
-                <p className="font-semibold text-black mb-2">No platforms yet</p>
-                <p className="text-slate-500 text-sm">Check back soon!</p>
+        {/* Platform Buttons — horizontal, scrollable */}
+        <div className="flex flex-col gap-2">
+          {loadingPlatforms ? (
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="h-10 w-28 shrink-0 rounded-full" />
+              ))}
+            </div>
+          ) : platforms.length === 0 ? (
+            <div className="text-center py-16 bg-card border border-border rounded-2xl">
+              <div className="w-12 h-12 bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <Zap className="h-6 w-6 text-primary" />
               </div>
-            ) : (
-              platforms.map((platform: any) => {
+              <p className="font-semibold text-sm text-foreground">No platforms yet</p>
+              <p className="text-muted-foreground text-xs mt-1">Check back soon!</p>
+            </div>
+          ) : (
+            <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+              {platforms.map((platform: any) => {
                 const isSelected = selectedPlatform?.id === platform.id;
                 const hasUrl = !!platform.apiEndpoint;
                 const isFeatured = platform.placement === "homepage";
@@ -71,114 +70,92 @@ export default function Platforms() {
                     key={platform.id}
                     onClick={() => hasUrl && setSelectedPlatform(platform)}
                     disabled={!hasUrl}
-                    className={`w-auto lg:w-full min-w-[140px] lg:min-w-0 text-left flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-3 lg:py-4 rounded-xl border transition-all duration-200 group ${
+                    className={`shrink-0 flex items-center gap-2 pl-2 pr-3 py-2 rounded-full border transition-all duration-200 ${
                       isSelected
-                        ? "modern-card-accent border-cyan-500/30"
+                        ? "bg-primary text-white border-primary shadow-[0_2px_12px_rgba(249,115,22,0.25)]"
                         : hasUrl
-                        ? "modern-card hover:border-blue-500/25 cursor-pointer"
-                        : "modern-card opacity-50 cursor-not-allowed"
+                        ? "bg-card border-border hover:border-primary/40 hover:bg-primary/5 cursor-pointer"
+                        : "bg-card border-border opacity-50 cursor-not-allowed"
                     }`}
                   >
                     {platform.logoUrl ? (
                       <img
                         src={platform.logoUrl}
                         alt={platform.name}
-                        className="w-8 h-8 lg:w-11 lg:h-11 rounded-lg lg:rounded-xl object-cover border border-slate-700 shrink-0"
+                        className="w-6 h-6 rounded-full object-cover border border-white/20 shrink-0"
                       />
                     ) : (
-                      <div className={`w-8 h-8 lg:w-11 lg:h-11 rounded-lg lg:rounded-xl flex items-center justify-center shrink-0 border ${
-                        isSelected ? "bg-gradient-to-br from-cyan-500/25 to-teal-500/15 border-cyan-500/20" : "bg-slate-800 border-slate-700"
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 border ${
+                        isSelected ? "bg-white/20 border-white/30" : "bg-primary/10 border-primary/20"
                       }`}>
-                        <Zap className={`h-4 w-4 lg:h-5 lg:w-5 ${isSelected ? "text-cyan-400" : "text-slate-500"}`} />
+                        <Zap className={`h-3 w-3 ${isSelected ? "text-white" : "text-primary"}`} />
                       </div>
                     )}
-                    <div className="flex-1 min-w-0 hidden lg:block">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className={`font-semibold text-sm truncate ${isSelected ? "text-gradient-accent" : "text-white"}`}>
-                          {platform.name}
-                        </p>
-                        {isFeatured && (
-                          <span className={`text-[9px] px-2 py-0.5 rounded-lg font-bold uppercase tracking-wider ${
-                            isSelected ? "bg-cyan-500 text-white" : "bg-cyan-500/15 text-cyan-400 border border-cyan-500/15"
-                          }`}>
-                            Featured
-                          </span>
-                        )}
-                      </div>
-                      <p className={`text-xs truncate mt-1 ${isSelected ? "text-cyan-400/70" : "text-slate-500"}`}>
-                        {hasUrl ? "Click to open" : "Coming soon"}
-                      </p>
-                    </div>
-                    {/* Show name only on mobile */}
-                    <div className="lg:hidden min-w-0">
-                      <p className={`font-semibold text-xs truncate ${isSelected ? "text-cyan-400" : "text-white"}`}>
-                        {platform.name}
-                      </p>
-                      {isFeatured && (
-                        <span className={`text-[8px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${
-                          isSelected ? "bg-cyan-500 text-white" : "bg-cyan-500/15 text-cyan-400"
-                        }`}>
-                          Featured
-                        </span>
-                      )}
-                    </div>
-                    {hasUrl && (
-                      <ChevronRight className={`h-4 w-4 lg:h-5 lg:w-5 shrink-0 transition-transform hidden lg:block ${isSelected ? "text-cyan-400" : "text-slate-500 group-hover:text-cyan-400 group-hover:translate-x-1"}`} />
+                    <span className={`font-bold text-xs whitespace-nowrap ${isSelected ? "text-white" : "text-foreground"}`}>
+                      {platform.name}
+                    </span>
+                    {isFeatured && (
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wide shrink-0 ${
+                        isSelected ? "bg-white/25 text-white" : "bg-primary/15 text-primary"
+                      }`}>
+                        Featured
+                      </span>
                     )}
                   </button>
                 );
-              })
-            )}
-          </div>
+              })}
+            </div>
+          )}
+        </div>
 
-          {/* Iframe Panel */}
-          <div className="flex-1 modern-card rounded-2xl overflow-hidden flex flex-col">
-            {selectedPlatform ? (
-              <>
-                {/* Top bar */}
-                <div className="flex items-center gap-3 px-5 py-4 border-b border-blue-900/10 bg-slate-950/50 shrink-0">
-                  <div className="relative">
-                    <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse shadow-lg shadow-cyan-400/50" />
-                    <div className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping opacity-50" />
+        {/* Iframe Panel — always shows selected platform */}
+        <div
+          className="bg-card border border-border rounded-2xl overflow-hidden flex flex-col shadow-sm"
+          style={{ height: "calc(100vh - 230px)", minHeight: "560px" }}
+        >
+          {selectedPlatform ? (
+            <>
+              {/* Top bar */}
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-primary/5 shrink-0">
+                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                {selectedPlatform.logoUrl ? (
+                  <img src={selectedPlatform.logoUrl} alt={selectedPlatform.name} className="w-6 h-6 rounded object-cover border border-border" />
+                ) : (
+                  <div className="w-6 h-6 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center">
+                    <Zap className="h-3.5 w-3.5 text-primary" />
                   </div>
-                  {selectedPlatform.logoUrl ? (
-                    <img src={selectedPlatform.logoUrl} alt={selectedPlatform.name} className="w-7 h-7 rounded-lg object-cover border border-slate-700" />
-                  ) : (
-                    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-cyan-500/20 to-teal-500/10 flex items-center justify-center border border-cyan-500/15">
-                      <Zap className="h-4 w-4 text-cyan-400" />
-                    </div>
-                  )}
-                  <span className="font-semibold text-black flex-1">{selectedPlatform.name}</span>
-                  <a
-                    href={getOfferUrl(selectedPlatform)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" /> Open in new tab
-                  </a>
-                </div>
-
-                <iframe
-                  key={selectedPlatform.id}
-                  src={getOfferUrl(selectedPlatform)}
-                  className="flex-1 w-full border-0"
-                  allow="fullscreen"
-                  title={selectedPlatform.name}
-                />
-              </>
-            ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10 flex items-center justify-center mb-6 border border-blue-500/15">
-                  <Gamepad2 className="h-10 w-10 text-blue-400" />
-                </div>
-                <h3 className="text-xl font-bold text-black mb-3">No Platform Selected</h3>
-                <p className="text-slate-500 text-sm max-w-sm">
-                  Select a platform from the list to start earning USDT rewards.
-                </p>
+                )}
+                <span className="font-bold text-sm text-foreground flex-1">{selectedPlatform.name}</span>
+                <a
+                  href={getOfferUrl(selectedPlatform)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-xs text-primary hover:underline font-medium shrink-0"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" /> Open in new tab
+                </a>
               </div>
-            )}
-          </div>
+
+              {/* The iframe — always open, never closes */}
+              <iframe
+                key={selectedPlatform.id}
+                src={getOfferUrl(selectedPlatform)}
+                className="flex-1 w-full border-0"
+                allow="fullscreen"
+                title={selectedPlatform.name}
+              />
+            </>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-5">
+                <Zap className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="text-lg font-bold text-foreground mb-2">No platforms available</h3>
+              <p className="text-muted-foreground text-sm max-w-xs">
+                The admin hasn't added any offerwalls yet. Check back soon!
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </Layout>
