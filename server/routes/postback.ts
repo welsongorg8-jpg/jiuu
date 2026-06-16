@@ -60,7 +60,8 @@ async function handlePostback(
 
   const secret = q.secret ?? q.hash ?? q.key ?? q.sig ?? "";
 
-  // FIXED: missing operators (||)
+console.log("POSTBACK RECEIVED:", q);
+ // FIXED: missing operators (||)
   if (!userId || !rawAmt || !txid) {
     logger.warn({ q, platformId: platform.id }, "Postback: missing required params");
     res.status(400).send("ERROR: Missing required params");
@@ -68,6 +69,7 @@ async function handlePostback(
   }
 
   const amount = parseFloat(rawAmt);
+
   // FIXED: missing operators (||)
   if (isNaN(amount) || amount <= 0) {
     logger.warn({ rawAmt }, "Postback: invalid amount");
@@ -163,7 +165,6 @@ async function handlePostback(
   logger.info({ uid, amount: userAmount, platform: platform.name, txid }, "Postback: credited");
   res.send("OK");
 }
-
 
 // ─── Helper: load platform by ID ─────────────────────────────────────────────
 
