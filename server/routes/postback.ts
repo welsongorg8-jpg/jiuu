@@ -201,7 +201,24 @@ router.get("/postback/:platformId", async (req: Request, res: Response) => {
   const platform = await loadPlatformById(platformId, res);
   if (!platform) return;
 
-  await handlePostback(platform, req.query as Record<string, string>, res);
+  const data = { ...req.query, ...req.body } as Record<string, string>;
+  await handlePostback(platform, data, res);
+});
+
+router.post("/postback/:platformId", async (req: Request, res: Response) => {
+  const platformId = parseInt(req.params.platformId as string);
+
+  if (isNaN(platformId)) {
+    logger.warn("Postback: invalid platformId");
+    res.status(400).send("ERROR: Invalid platform");
+    return;
+  }
+
+  const platform = await loadPlatformById(platformId, res);
+  if (!platform) return;
+
+  const data = { ...req.query, ...req.body } as Record<string, string>;
+  await handlePostback(platform, data, res);
 });
 
 // ─── Route 2: /file  (CPX Research and platforms using a fixed path) ──────────
@@ -214,8 +231,8 @@ router.get("/postback/:platformId", async (req: Request, res: Response) => {
 // CPX Research postback URL to paste in dashboard (replace hash with your Security Hash):
 //   https://DOMAIN/file?status={status}&trans_id={trans_id}&user_id={user_id}&sub_id={subid}&sub_id_2={subid_2}&amount_local={amount_local}&amount_usd={amount_usd}&offer_id={offer_ID}&hash={secure_hash}&ip_click={ip_click}
 
-router.get("/file", async (req: Request, res: Response) => {
-  const q = req.query as Record<string, string>;
+async function handleFileRoute(req: Request, res: Response) {
+  const q = { ...req.query, ...req.body } as Record<string, string>;
 
   let platform: typeof platformsTable.$inferSelect | null = null;
 
@@ -255,6 +272,9 @@ router.get("/file", async (req: Request, res: Response) => {
   }
 
   await handlePostback(platform, q, res);
-});
+}
+
+router.get("/file", handleFileRoute);
+router.post("/file", handleFileRoute);
 
 export default router;
